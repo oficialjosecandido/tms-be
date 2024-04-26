@@ -141,5 +141,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #  STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Media files configuration
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_ACCESS_KEY_ID = 'AKIA6ODU6TIGJ4YRYLWN'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'ericeiraauctions'
+AWS_S3_REGION_NAME = 'eu-west-2'
+AWS_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_S3_VERIFY = True
+
+AWS_S3_CUSTOM_DOMAIN = 'ericeiraauctions.s3.amazonaws.com'
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

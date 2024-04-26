@@ -63,6 +63,7 @@ class Listing(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending Validation')
     created_at = models.DateTimeField(auto_now_add=True)
+    # files = models.FileField(upload_to='ids/', blank=True, null=True)
 
     def __str__(self):
         return f'Listing ID: {self.id}, Customer: {self.customer.display_name}'

@@ -2,7 +2,9 @@ import json
 from rest_framework.decorators import api_view
 from rest.models import Listing, Customer
 from django.http import JsonResponse
-
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 
 @api_view(['POST'])
 def create_listing(request):
@@ -15,8 +17,8 @@ def create_listing(request):
             # Extract relevant data from the JSON
             buy_date = data.get('buyDate')
             bike_condition = data.get('bikeCondition')
-            bike_options = {option['name']: option['isChecked'] for option in data.get('bikeOptions', [])}
-            bike_accessories = {accessory['name']: accessory['isChecked'] for accessory in data.get('bikeAccessories', [])}
+            bike_options = json.dumps({option['name']: option['isChecked'] for option in data.get('bikeOptions', [])})
+            bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in data.get('bikeAccessories', [])})
             customer_data = {
                 'display_name': data.get('name'),
                 'shipping_address': data.get('address'),
@@ -36,6 +38,17 @@ def create_listing(request):
                 customer=customer,
             )
 
+            # Send email notification to the user
+            subject = 'Listing Created and Pending Approval'
+            message = render_to_string('emails/create_listing_success.html', {
+                'listing_id': listing.id,
+                'customer_name': data.get('name'),
+                'dashboard_link': 'https://www.tms.com/dashboard/listing/' + str(listing.id)
+            })
+            plain_message = strip_tags(message)
+            from_email = None
+            to_email = [customer.email]
+            send_mail(subject, plain_message, from_email, to_email, html_message=message)
 
             # Return a JSON response including the created listing
             return JsonResponse({'message': 'Listing created successfully', 'listing': {
