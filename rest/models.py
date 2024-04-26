@@ -56,12 +56,27 @@ class Listing(models.Model):
         ('Rejected', 'Rejected'),
     ]
 
-    buy_date = models.CharField(max_length=100)
-    bike_condition = models.CharField(max_length=100)
+    BUY_DATE_CHOICES = [
+        ('Before 2018', 'Before 2018'),
+        ('2018 - 2020', '2018 - 2020'),
+        ('2021 - 2022', '2021 - 2022'),
+        ('2023 to present', '2023 to present')
+    ]
+
+    CONDITION_CHOICES = [
+        ('Needs some love', 'Needs some love'),
+        ('Works well (201-500 Rides)', 'Works well (201-500 Rides)'),
+        ('Very good (51-200 Rides)', 'Very good (51-200 Rides)'),
+        ('Excellent (0 - 50 Rides)', 'Excellent (0 - 50 Rides)')
+    ]
+
+    buy_date = models.CharField(max_length=100, choices=BUY_DATE_CHOICES, blank=True, null=True)
+    bike_condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
+
     bike_options = models.JSONField()
     bike_accessories = models.JSONField()
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending Validation')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Approved')
     created_at = models.DateTimeField(auto_now_add=True)
     # files = models.FileField(upload_to='ids/', blank=True, null=True)
 

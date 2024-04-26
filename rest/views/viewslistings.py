@@ -5,6 +5,8 @@ from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.conf import settings
+
 
 @api_view(['POST'])
 def create_listing(request):
@@ -16,7 +18,11 @@ def create_listing(request):
             
             # Extract relevant data from the JSON
             buy_date = data.get('buyDate')
+            buy_date = convert_buy_date_format(buy_date)
+
             bike_condition = data.get('bikeCondition')
+            bike_condition = convert_bike_condition_format(bike_condition)
+
             bike_options = json.dumps({option['name']: option['isChecked'] for option in data.get('bikeOptions', [])})
             bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in data.get('bikeAccessories', [])})
             customer_data = {
@@ -46,7 +52,7 @@ def create_listing(request):
                 'dashboard_link': 'https://www.tms.com/dashboard/listing/' + str(listing.id)
             })
             plain_message = strip_tags(message)
-            from_email = None
+            from_email = settings.EMAIL_HOST_USER
             to_email = [customer.email]
             send_mail(subject, plain_message, from_email, to_email, html_message=message)
 
@@ -68,3 +74,31 @@ def create_listing(request):
     else:
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+    
+
+def convert_buy_date_format(buy_date):
+    # Convert the buy date to appropriate format
+    if buy_date == 'Before 2018':
+        return 'Before 2018'
+    elif buy_date == '2018 - 2020':
+        return '2018 - 2020'
+    elif buy_date == '2021 - 2022':
+        return '2021 - 2022'
+    elif buy_date == '2023 to present':
+        return '2023 to present'
+    else:
+        return buy_date
+    
+
+def convert_bike_condition_format(bike_condition):
+    # Convert the bike condition to appropriate format
+    if bike_condition == 'Needs some love':
+        return 'Needs some love'
+    elif bike_condition == 'Works well (201-500 Rides)':
+        return 'Works well (201-500 Rides)'
+    elif bike_condition == 'Very good (51-200 Rides)':
+        return 'Very good (51-200 Rides)'
+    elif bike_condition == 'Excellent (0 - 50 Rides)':
+        return 'Excellent (0 - 50 Rides)'
+    else:
+        return bike_condition
