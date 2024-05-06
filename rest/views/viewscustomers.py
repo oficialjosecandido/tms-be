@@ -16,9 +16,20 @@ def create_customer(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-def get_customer(request, email):
+def retrieve_customer(request, identifier):
+    print(2222, identifier)
     try:
-        customer = Customer.objects.get(email=email)
+        # Check if the identifier is an email address
+        if '@' in identifier:
+            customer = Customer.objects.get(email=identifier)
+        # Check if the identifier is a phone number
+        elif identifier.isdigit():
+            # Assuming you have a field named "phone_number" in your Customer model
+            customer = Customer.objects.get(phone_number=identifier)
+        else:
+            # Handle invalid identifier format
+            return Response({"error": "Invalid identifier format"}, status=400)
+        
         serializer = CustomerSerializer(customer)
         return Response(serializer.data)
     except Customer.DoesNotExist:

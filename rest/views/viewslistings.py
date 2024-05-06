@@ -1,4 +1,5 @@
 import json
+from rest.serializers import ListingSerializer
 from rest_framework.decorators import api_view
 from rest.models import Listing, Customer
 from django.http import JsonResponse
@@ -6,7 +7,23 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from rest_framework.response import Response
 
+
+
+@api_view(['GET'])
+def my_listings(request, identifier):
+
+    print(2222, identifier)
+    customer = Customer.objects.get(email=identifier)
+
+    try:
+        listings = Listing.objects.filter(customer=customer)
+        serializer = ListingSerializer(listings, many=True)  # Ensure many=True for queryset
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listings not found"}, status=404)
+    
 
 @api_view(['POST'])
 def create_listing(request):
@@ -17,6 +34,7 @@ def create_listing(request):
             data = json.loads(request.body)
             
             # Extract relevant data from the JSON
+            asking_price = data.get('askingPrice')
             buy_date = data.get('buyDate')
             buy_date = convert_buy_date_format(buy_date)
 
@@ -41,6 +59,7 @@ def create_listing(request):
                 bike_condition=bike_condition,
                 bike_options=bike_options,
                 bike_accessories=bike_accessories,
+                asking_price=asking_price,
                 customer=customer,
             )
 
