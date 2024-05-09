@@ -25,6 +25,7 @@ def retrieve_customer(request, identifier):
         # Check if the identifier is a phone number
         elif identifier.isdigit():
             # Assuming you have a field named "phone_number" in your Customer model
+            identifier = '+' + identifier
             customer = Customer.objects.get(phone_number=identifier)
         else:
             # Handle invalid identifier format

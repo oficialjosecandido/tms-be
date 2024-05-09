@@ -17,7 +17,7 @@ class Productserializer(serializers.ModelSerializer):
 class ListingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Listing
-        fields = ['buy_date', 'bike_condition', 'bike_options', 'bike_accessories', 'customer', 'asking_price', 'status', 'created_at']
+        fields = ['id', 'buy_date', 'bike_condition', 'bike_options', 'bike_accessories', 'customer', 'asking_price', 'status', 'created_at']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

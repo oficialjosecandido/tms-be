@@ -6,6 +6,15 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+import os
+
+def customer_image_upload_path(instance, filename):
+    # Get the customer's email
+        customer_email = instance.customer.email
+        # Replace special characters in the email to create a valid folder name
+        folder_name = customer_email.replace('@', '_').replace('.', '_')
+        # Construct the file path
+        return os.path.join('customer_images', folder_name, filename)
 
 class CustomUser(AbstractUser):
     # Your custom user model fields go here
@@ -51,9 +60,13 @@ class Customer(models.Model):
 
 class Listing(models.Model):
     STATUS_CHOICES = [
-        ('Pending Validation', 'Pending Validation'),
+        ('Pending Approval', 'Pending Approval'),
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected'),
+        ('Pending Pickup', 'Pending Pickup'),
+        ('Pending Delivery', 'Pending Delivery'),
+        ('Delivered', 'Deliver'),
+        ('Sold', 'Sold'),
     ]
 
     BUY_DATE_CHOICES = [
@@ -79,7 +92,9 @@ class Listing(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Approved')
     created_at = models.DateTimeField(auto_now_add=True)
     asking_price = models.IntegerField(default=0, null=True, blank=True)
-    # files = models.FileField(upload_to='ids/', blank=True, null=True)
+    image = models.FileField(upload_to=customer_image_upload_path, blank=True, null=True)
+
+    
 
     def __str__(self):
         return f'Listing ID: {self.id} with price {self.asking_price}, Customer: {self.customer.display_name}'

@@ -141,10 +141,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 #  STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
 
 # Media files configuration
-AWS_ACCESS_KEY_ID = 'AKIA6ODU6TIGJ4YRYLWN'
-AWS_SECRET_ACCESS_KEY = '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'
-AWS_STORAGE_BUCKET_NAME = 'ericeiraauctions'
-AWS_S3_REGION_NAME = 'eu-west-2'
+AWS_ACCESS_KEY_ID = 'AKIAVRUVVSYZQMLU44M4'
+AWS_SECRET_ACCESS_KEY = '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'
+AWS_STORAGE_BUCKET_NAME = 'trademyspin-dev'
+AWS_S3_REGION_NAME = 'eu-north-1'
 AWS_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
@@ -158,6 +158,6 @@ EMAIL_HOST_PASSWORD = 'dGxP7ytYD_$-ngR'
 EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 
-AWS_S3_CUSTOM_DOMAIN = 'ericeiraauctions.s3.amazonaws.com'
+AWS_S3_CUSTOM_DOMAIN = 'trademyspin.s3.amazonaws.com'
 MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

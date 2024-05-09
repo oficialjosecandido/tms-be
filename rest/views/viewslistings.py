@@ -19,7 +19,7 @@ def my_listings(request, identifier):
 
     try:
         listings = Listing.objects.filter(customer=customer)
-        serializer = ListingSerializer(listings, many=True)  # Ensure many=True for queryset
+        serializer = ListingSerializer(listings, many=True)
         return Response(serializer.data)
     except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
@@ -94,6 +94,26 @@ def create_listing(request):
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
+
+@api_view(['POST'])
+def update_listing(request):
+    # Parse the byte object into a dictionary
+    data = json.loads(request.body)
+
+    # Get the original listing
+    listing_id = data.get('id')
+    listing = Listing.objects.filter(id=listing_id).first()
+    if listing:
+        # Update the asking price
+        listing.asking_price = data.get('asking_price')
+        listing.status = data.get('status')
+        # listing = data
+        listing.save()
+        return JsonResponse({'message': 'Listing updated successfully'}, status=200)
+    else:
+        return JsonResponse({'error': 'Listing not found'}, status=404)
+
+
 
 def convert_buy_date_format(buy_date):
     # Convert the buy date to appropriate format
