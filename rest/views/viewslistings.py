@@ -27,31 +27,47 @@ def my_listings(request, identifier):
 
 @api_view(['POST'])
 def create_listing(request):
-    print(request.body)
+    # print(request.body)
     if request.method == 'POST':
         try:
             # Decode the JSON data from the request body
             data = json.loads(request.body)
+            print(data)
+
             
-            # Extract relevant data from the JSON
-            asking_price = data.get('askingPrice')
-            buy_date = data.get('buyDate')
+            
+            # Extract bike Info
+            bike_data = data.get('bikeInfo')
+            asking_price = bike_data.get('askingPrice')
+            buy_date = bike_data.get('buyDate')
             buy_date = convert_buy_date_format(buy_date)
 
-            bike_condition = data.get('bikeCondition')
+            bike_condition = bike_data.get('bikeCondition')
             bike_condition = convert_bike_condition_format(bike_condition)
 
-            bike_options = json.dumps({option['name']: option['isChecked'] for option in data.get('bikeOptions', [])})
-            bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in data.get('bikeAccessories', [])})
+            bike_options = json.dumps({option['name']: option['isChecked'] for option in bike_data.get('bikeOptions', [])})
+            bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in bike_data.get('bikeAccessories', [])})
+
+            # Extract customer info
+            customer_info = data.get('customerInfo')
             customer_data = {
-                'display_name': data.get('name'),
-                'shipping_address': data.get('address'),
-                'email': data.get('email'),
-                'phone_number': data.get('phoneNumber')
+                'display_name': customer_info.get('name'),
+                'shipping_address': customer_info.get('address'),
+                'email': customer_info.get('email'),
+                'phone_number': customer_info.get('phoneNumber')
             }
 
-            # Create a new Customer object or retrieve an existing one
-            customer, created = Customer.objects.get_or_create(email=customer_data['email'], defaults=customer_data)
+            print(customer_data)
+
+            # Check if a customer with the same email and phone number exists
+            customer = Customer.objects.filter(email=customer_data['email'], phone_number=customer_data['phone_number']).first()
+
+            # If a customer exists, use the existing customer
+            if customer:
+                created = False
+            else:
+                # Otherwise, create a new customer
+                customer, created = Customer.objects.get_or_create(email=customer_data['email'], phone_number=customer_data['phone_number'], defaults=customer_data)
 
             # Create a new Listing object
             listing = Listing.objects.create(
@@ -93,7 +109,7 @@ def create_listing(request):
     else:
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
-    
+
 
 @api_view(['POST'])
 def update_listing(request):
@@ -112,7 +128,6 @@ def update_listing(request):
         return JsonResponse({'message': 'Listing updated successfully'}, status=200)
     else:
         return JsonResponse({'error': 'Listing not found'}, status=404)
-
 
 
 def convert_buy_date_format(buy_date):

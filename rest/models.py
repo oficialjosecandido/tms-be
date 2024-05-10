@@ -100,6 +100,30 @@ class Listing(models.Model):
         return f'Listing ID: {self.id} with price {self.asking_price}, Customer: {self.customer.display_name}'
 
 
+class Transaction(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Done', 'Done'),
+        ('Rejected', 'Rejected'),
+    ]
+
+    listing_id = models.IntegerField()
+    amount = models.IntegerField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    
+    # Seller information
+    seller_name = models.CharField(max_length=100)
+    seller_email = models.EmailField()
+    seller_phone_number = models.CharField(max_length=20)
+    
+    # Buyer information
+    buyer_name = models.CharField(max_length=100)
+    buyer_email = models.EmailField()
+    buyer_phone_number = models.CharField(max_length=20)
+    
+    def __str__(self):
+        return f'Transaction ID: {self.id} for Listing ID: {self.listing_id}'
+
 class Bid(models.Model):
     bidprice = models.DecimalField(max_digits=10, decimal_places=2)
     biduser = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
