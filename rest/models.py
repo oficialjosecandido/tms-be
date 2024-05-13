@@ -65,7 +65,7 @@ class Listing(models.Model):
         ('Rejected', 'Rejected'),
         ('Pending Pickup', 'Pending Pickup'),
         ('Pending Delivery', 'Pending Delivery'),
-        ('Delivered', 'Deliver'),
+        ('Delivered', 'Delivered'),
         ('Sold', 'Sold'),
     ]
 
@@ -107,7 +107,6 @@ class Transaction(models.Model):
         ('Rejected', 'Rejected'),
     ]
 
-    listing_id = models.IntegerField()
     amount = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     
@@ -120,16 +119,14 @@ class Transaction(models.Model):
     buyer_name = models.CharField(max_length=100)
     buyer_email = models.EmailField()
     buyer_phone_number = models.CharField(max_length=20)
+
+    items = models.CharField(max_length=200, blank=True, null=True)
+    
+    # Dates
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
     
     def __str__(self):
-        return f'Transaction ID: {self.id} for Listing ID: {self.listing_id}'
-
-class Bid(models.Model):
-    bidprice = models.DecimalField(max_digits=10, decimal_places=2)
-    biduser = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
-    bidlisting = models.ForeignKey(Listing, on_delete=models.CASCADE)
-    bid_date = models.DateTimeField(auto_now_add=True)
+        return f'Transaction ID: {self.id}'
 
 
-    def __str__(self):
-        return f"Bid for {self.bidlisting.title} by {self.biduser.username} at {self.bidprice}"

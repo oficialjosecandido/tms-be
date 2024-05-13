@@ -1,6 +1,6 @@
 # myapp/serializers.py
 from rest_framework import serializers
-from .models import CustomUser, Listing, Customer
+from .models import *
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -33,4 +33,10 @@ class ListingSerializer(serializers.ModelSerializer):
     def to_representation(self, instance):
         representation = super().to_representation(instance)
         return representation
+    
+
+class TransactionsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Transaction
+        fields = '__all__'
     
