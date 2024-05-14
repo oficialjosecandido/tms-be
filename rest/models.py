@@ -40,7 +40,6 @@ class CustomUser(AbstractUser):
 class Customer(models.Model):
     display_name = models.CharField(max_length=500, blank=True, null=True)
     email = models.CharField(max_length=500)
-    # id_number = models.CharField(max_length=500, blank=True, null=True)
     phone_number = models.CharField(max_length=100, blank=True, null=True)
     balance = models.IntegerField(default=0, null=True, blank=True)
     trusted_buyer = models.BooleanField(default=False)
@@ -50,7 +49,6 @@ class Customer(models.Model):
     billing_address = models.TextField(blank=True, null=True)
     shipping_address = models.TextField(blank=True, null=True)
     profile_picture = models.FileField(upload_to='profiles/', blank=True, null=True)
-    # id_file = models.FileField(upload_to='ids/', blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=150, blank=True, null=True, default='Waiting 3rd Party Activation')
 
@@ -82,7 +80,7 @@ class Listing(models.Model):
         ('Very good (51-200 Rides)', 'Very good (51-200 Rides)'),
         ('Excellent (0 - 50 Rides)', 'Excellent (0 - 50 Rides)')
     ]
-
+    model = models.CharField(max_length=100, null=True, blank=True)
     buy_date = models.CharField(max_length=100, choices=BUY_DATE_CHOICES, blank=True, null=True)
     bike_condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
 
@@ -94,7 +92,11 @@ class Listing(models.Model):
     asking_price = models.IntegerField(default=0, null=True, blank=True)
     image = models.FileField(upload_to=customer_image_upload_path, blank=True, null=True)
 
-    
+    def save_images(self, images):
+        for index, image in enumerate(images):
+            file_name = f"listing_{self.id}_image_{index + 1}.jpg"  # Customize the file name as per your requirement
+            self.image.save(file_name, image, save=False)
+        self.save()
 
     def __str__(self):
         return f'Listing ID: {self.id} with price {self.asking_price}, Customer: {self.customer.display_name}'

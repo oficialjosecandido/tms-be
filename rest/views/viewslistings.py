@@ -8,8 +8,16 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from rest_framework.response import Response
+from django.utils import timezone
 
-
+@api_view(['GET'])
+def all_listings(request):
+    try:
+        listings = Listing.objects.all()
+        serializer = ListingSerializer(listings, many=True)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listings not found"}, status=404)
 
 @api_view(['GET'])
 def my_listings(request, identifier):
@@ -33,11 +41,10 @@ def create_listing(request):
             # Decode the JSON data from the request body
             data = json.loads(request.body)
             print(data)
-
-            
             
             # Extract bike Info
             bike_data = data.get('bikeInfo')
+            model = bike_data.get('model')
             asking_price = bike_data.get('askingPrice')
             buy_date = bike_data.get('buyDate')
             buy_date = convert_buy_date_format(buy_date)
@@ -47,6 +54,17 @@ def create_listing(request):
 
             bike_options = json.dumps({option['name']: option['isChecked'] for option in bike_data.get('bikeOptions', [])})
             bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in bike_data.get('bikeAccessories', [])})
+
+            # Check if "Cracked or Broken Screen" option is true
+            # cracked_or_broken_screen = bike_data.get('bikeOptions', {}).get('Craked or Broken Screen', False)
+
+            # Set the status based on the condition
+            """ if cracked_or_broken_screen:
+                status = 'Rejected'
+            else:
+                status = 'Approved' """
+
+            status = 'Approved'
 
             # Extract customer info
             customer_info = data.get('customerInfo')
@@ -71,11 +89,13 @@ def create_listing(request):
 
             # Create a new Listing object
             listing = Listing.objects.create(
+                model=model,
                 buy_date=buy_date,
                 bike_condition=bike_condition,
                 bike_options=bike_options,
                 bike_accessories=bike_accessories,
                 asking_price=asking_price,
+                status=status,
                 customer=customer,
             )
 
@@ -109,6 +129,21 @@ def create_listing(request):
     else:
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@api_view(['POST'])
+def my_images(request):
+    if request.method == 'POST' and request.FILES.getlist('images'):
+        images = request.FILES.getlist('images')
+        listing_id = request.POST.get('listing_id')  # Get the listing ID from the request
+        try:
+            listing = Listing.objects.get(id=listing_id)
+            listing.save_images(images)
+            return JsonResponse({'message': 'Images uploaded successfully'}, status=201)
+        except Listing.DoesNotExist:
+            return JsonResponse({'error': 'Listing not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'No images provided'}, status=400)
+
 
 
 @api_view(['POST'])
@@ -156,3 +191,5 @@ def convert_bike_condition_format(bike_condition):
         return 'Excellent (0 - 50 Rides)'
     else:
         return bike_condition
+
+

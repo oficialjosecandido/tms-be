@@ -25,6 +25,10 @@ def get_customer(request):
 
 
 # views for listings
+def listings(request):
+    response = all_listings(request)
+    return response
+
 @csrf_exempt
 def new_listing(request):
     response = create_listing(request)
@@ -39,9 +43,20 @@ def get_mylistings(request, identifier):
     response = my_listings(request, identifier)
     return response
 
+@csrf_exempt
+def upload_images(request):
+    response = my_images(request)
+    return response
+
 
 
 #views for transactions
+@csrf_exempt
+def new_payment(request):
+    print(444, request)
+    response = new_payment_order(request)
+    return response
+
 def get_mypayments(request, identifier):
     response = my_payments(request, identifier)
     return response
