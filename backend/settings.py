@@ -43,7 +43,7 @@ CORS_ALLOWED_ORIGINS = [
     # Add any other origins as needed
 ]
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tms-dev-787d4.web.app']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tms-dev-787d4.web.app', 'tms-dev-32521fed1ae6.herokuapp.com']
 
 # Application definition
 
