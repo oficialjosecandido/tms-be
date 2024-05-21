@@ -58,7 +58,6 @@ class Customer(models.Model):
 
 class Listing(models.Model):
     STATUS_CHOICES = [
-        ('Pending Approval', 'Pending Approval'),
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected'),
         ('Pending Pickup', 'Pending Pickup'),
@@ -129,6 +128,6 @@ class Transaction(models.Model):
     updated_at = models.DateField(auto_now=True)
     
     def __str__(self):
-        return f'Transaction ID: {self.id}'
+        return f'Transaction ID: {self.id} with seller: {self.seller_name} and buyer: {self.buyer_name} with status: {self.status} for {self.amount}'
 
 

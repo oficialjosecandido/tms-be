@@ -69,3 +69,8 @@ def get_myreceivals(request, identifier):
 def listing_transactions(request, identifier):
     response = get_transactions(request, identifier)
     return response
+
+@csrf_exempt
+def stripe_charge(request):
+    response = charge(request)
+    return response

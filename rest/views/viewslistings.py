@@ -13,7 +13,7 @@ from django.utils import timezone
 @api_view(['GET'])
 def all_listings(request):
     try:
-        listings = Listing.objects.all()
+        listings = Listing.objects.order_by('-created_at')
         serializer = ListingSerializer(listings, many=True)
         return Response(serializer.data)
     except Listing.DoesNotExist:

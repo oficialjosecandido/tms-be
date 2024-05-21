@@ -19,6 +19,7 @@ urlpatterns = [
     path('upload-images/', views.upload_images, name='upload_images'),
 
     # transactions
+    path('charge/', views.stripe_charge, name='charge'),
     path('new_payment', views.new_payment, name='new_payment'),
     path('payments/<str:identifier>/', views.get_mypayments, name='get_mypayments'),
     path('receivals/<str:identifier>/', views.get_myreceivals, name='get_myreceivals'),

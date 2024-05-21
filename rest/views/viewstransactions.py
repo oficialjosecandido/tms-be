@@ -5,10 +5,15 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.http import JsonResponse
 from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+
 
 from rest.serializers import TransactionsSerializer
 from rest.models import *
 import json
+import stripe
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
 
 @api_view(['GET, POST, DELETE'])
 def get_transactions(request, listing_id):
@@ -100,4 +105,45 @@ def new_payment_order(request):
     else:
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
+@csrf_exempt
+def charge(request):
+    print(3333, request.body)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        token = data['token']
+        amount = data['amount']
 
+        # Extract additional fields for the Transaction model
+        seller_name = data.get('seller_name', 'Seller')
+        seller_email = data.get('seller_email', 'seller@example.com')
+        seller_phone_number = data.get('seller_phone_number', '0000000000')
+        buyer_name = data.get('buyer_name', 'Buyer')
+        buyer_email = data.get('buyer_email', 'buyer@example.com')
+        buyer_phone_number = data.get('buyer_phone_number', '0000000000')
+        items = data.get('items', '')
+
+        try:
+            charge = stripe.Charge.create(
+                amount=int(amount * 100),  # Stripe amount is in cents
+                currency='usd',
+                description='Payment description',
+                source=token,
+            )
+
+            # Create the transaction after a successful charge
+            transaction = Transaction.objects.create(
+                amount=amount,
+                status='Done',
+                seller_name=seller_name,
+                seller_email=seller_email,
+                seller_phone_number=seller_phone_number,
+                buyer_name=buyer_name,
+                buyer_email=buyer_email,
+                buyer_phone_number=buyer_phone_number,
+                items=items,
+            )
+
+            return JsonResponse({'success': True, 'charge': charge, 'transaction_id': transaction.id}, status=200)
+        except stripe.error.StripeError as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=500)
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
