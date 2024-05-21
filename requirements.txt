@@ -63,11 +63,6 @@ PyGetWindow==0.0.9
 PyJWT==2.6.0
 PyMsgBox==1.0.9
 pynput==1.7.6
-pyobjc-core==10.1
-pyobjc-framework-ApplicationServices==10.1
-pyobjc-framework-Cocoa==10.1
-pyobjc-framework-CoreText==10.1
-pyobjc-framework-Quartz==10.1
 pyotp==2.9.0
 pyperclip==1.8.2
 PyRect==0.2.0
