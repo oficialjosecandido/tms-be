@@ -2,4 +2,4 @@
 *.pyc
 
 # Ignore the secrets file
-secrets.py
+backend/secrets.py
