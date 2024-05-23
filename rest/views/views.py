@@ -43,6 +43,10 @@ def get_mylistings(request, identifier):
     response = my_listings(request, identifier)
     return response
 
+def listing_details(request, id):
+    response = listing_detail(request, id)
+    return response
+
 @csrf_exempt
 def upload_images(request):
     response = my_images(request)
@@ -69,6 +73,7 @@ def get_myreceivals(request, identifier):
 def listing_transactions(request, identifier):
     response = get_transactions(request, identifier)
     return response
+
 
 @csrf_exempt
 def stripe_charge(request):

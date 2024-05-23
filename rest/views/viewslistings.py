@@ -1,7 +1,7 @@
 import json
-from rest.serializers import ListingSerializer
+from rest.serializers import *
 from rest_framework.decorators import api_view
-from rest.models import Listing, Customer
+from rest.models import *
 from django.http import JsonResponse
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -9,6 +9,10 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from rest_framework.response import Response
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+
+from rest_framework import viewsets
+
 
 @api_view(['GET'])
 def all_listings(request):
@@ -144,25 +148,95 @@ def my_images(request):
     else:
         return JsonResponse({'error': 'No images provided'}, status=400)
 
+@api_view(['GET'])
+def listing_detail(request, id):
+    try:
+        listing = Listing.objects.get(id=id)
+        serializer = ListingSerializer(listing)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=404)
 
-
+@csrf_exempt    
 @api_view(['POST'])
-def update_listing(request):
-    # Parse the byte object into a dictionary
-    data = json.loads(request.body)
-
-    # Get the original listing
-    listing_id = data.get('id')
-    listing = Listing.objects.filter(id=listing_id).first()
+def update_listing_status(request, id):
+    
+    listing = Listing.objects.get(id=id)
     if listing:
-        # Update the asking price
-        listing.asking_price = data.get('asking_price')
-        listing.status = data.get('status')
-        # listing = data
+        listing.status = 'Pending Pickup'
         listing.save()
         return JsonResponse({'message': 'Listing updated successfully'}, status=200)
     else:
         return JsonResponse({'error': 'Listing not found'}, status=404)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def create_comment(request):
+    print(2222, request)
+    if request.method == 'POST':
+        try:
+            # Decode the JSON data from the request body
+            data = json.loads(request.body)
+            print(data)
+            
+            # Extract comment details
+            listing_id = data.get('listing')
+            name = data.get('name')
+            comment_text = data.get('comment')
+
+            if not listing_id or not name or not comment_text:
+                return JsonResponse({'error': 'Invalid input'}, status=400)
+
+            # Get the listing object
+            listing = Listing.objects.get(id=listing_id)
+
+            # Create a new Comment object
+            new_comment = Comment.objects.create(
+                listing=listing,
+                name=name,
+                comment=comment_text
+            )
+
+            # Send email notification to the user
+            subject = 'New Comment'
+            message = render_to_string('emails/create_listing_success.html', {
+                'listing_id': listing.id,
+                'seller_name': listing.customer.display_name,  # Assuming the customer is the seller
+                'dashboard_link': 'https://www.tms.com/seller/listing/' + str(listing.id)
+            })
+            plain_message = strip_tags(message)
+            from_email = settings.EMAIL_HOST_USER
+            to_email = [listing.customer.email]
+            send_mail(subject, plain_message, from_email, to_email, html_message=message)
+
+            # Return a JSON response including the created comment
+            return JsonResponse({'message': 'Comment created successfully', 'comment': {
+                'id': new_comment.id,
+                'listing': new_comment.listing.id,
+                'name': new_comment.name,
+                'comment': new_comment.comment,
+                'created_at': new_comment.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            }}, status=201)
+        except Listing.DoesNotExist:
+            return JsonResponse({'error': 'Listing not found'}, status=404)
+        except Exception as e:
+            # Return an error response if something goes wrong
+            return JsonResponse({'error': str(e)}, status=400)
+    else:
+        # Return a method not allowed response for non-POST requests
+        return JsonResponse({'error': 'Method not allowed'}, status=405)
+
+@api_view(['GET'])
+def get_comments(request, id):
+
+
+    try:
+        comments = Comment.objects.filter(listing=id)
+        serializer = CommentSerializer(comments, many=True)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Comments not found"}, status=404)
 
 
 def convert_buy_date_format(buy_date):

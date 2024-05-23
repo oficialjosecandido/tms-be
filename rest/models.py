@@ -93,13 +93,12 @@ class Listing(models.Model):
 
     def save_images(self, images):
         for index, image in enumerate(images):
-            file_name = f"listing_{self.id}_image_{index + 1}.jpg"  # Customize the file name as per your requirement
+            file_name = f"listing_{self.id}_image_{index + 1}.jpg" 
             self.image.save(file_name, image, save=False)
         self.save()
 
     def __str__(self):
         return f'Listing ID: {self.id} with price {self.asking_price}, Customer: {self.customer.display_name}'
-
 
 class Transaction(models.Model):
     STATUS_CHOICES = [
@@ -129,5 +128,19 @@ class Transaction(models.Model):
     
     def __str__(self):
         return f'Transaction ID: {self.id} with seller: {self.seller_name} and buyer: {self.buyer_name} with status: {self.status} for {self.amount}'
+    
+
+class Comment(models.Model):
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='comments')
+    name = models.CharField(max_length=100, null=True, blank=True)
+    comment = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'Comment by {self.name} on listing nº {self.listing.id}'
+    
+
+
+
 
 
