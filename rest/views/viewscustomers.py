@@ -49,6 +49,17 @@ def filter_customer(request):
         # Handle any exceptions that might occur during the process
         return JsonResponse({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+
+@api_view(['GET'])
+def customer_detail(request, id):
+    try:
+        customer = Customer.objects.get(id=id)
+        serializer = CustomerSerializer(customer)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=404)
+    
+
 """ @api_view(['GET, POST, DELETE'])
 def retrieve_customer(request, identifier):
 

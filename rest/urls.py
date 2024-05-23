@@ -1,7 +1,12 @@
 # myapp/urls.py
 
 from django.urls import path, include
-from .views import views
+from rest_framework.routers import DefaultRouter
+from .views import views, viewslistings, viewstransactions, viewscustomers
+
+# Create a router for the CommentViewSet
+""" router = DefaultRouter()
+router.register(r'comments', viewslistings.CommentViewSet) """
 
 urlpatterns = [
 
@@ -9,14 +14,18 @@ urlpatterns = [
     path('create-customer/', views.create_customer, name='create_customer'),
     # path('customer/<str:identifier>/', views.get_customer, name='get_customer'),
     path('customer/', views.get_customer, name='get_customer'),
+    path('customer/<int:id>/', viewscustomers.customer_detail, name='customer_detail'),
     # path('phone-customer/<str:identifier>', views.get_customer, name='phone_customer'),
     
     # listings
     path('listings/', views.listings, name='listings'),
     path('newlisting', views.new_listing, name='newlisting'),
-    path('mylistings/<str:identifier>/', views.get_mylistings, name='get_mylistings'),
-    path('updatelisting', views.updatelisting, name='newlisting'),
+    path('mylistings/<str:identifier>/', viewslistings.my_listings, name='get_mylistings'),
+    path('update-listing/<int:id>/', viewslistings.update_listing_status, name='newlisting'),
     path('upload-images/', views.upload_images, name='upload_images'),
+    path('listings/<int:id>/', viewslistings.listing_detail, name='listing_detail'),
+    path('create-comment/', viewslistings.create_comment, name='create-comment'),
+    path('comments/<int:id>', viewslistings.get_comments, name='comments'),
 
     # transactions
     path('charge/', views.stripe_charge, name='charge'),
