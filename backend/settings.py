@@ -40,6 +40,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
     "https://tms-dev-787d4.web.app",
+    "https://trademyspin.web.app"
     # Add any other origins as needed
 ]
 
