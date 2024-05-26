@@ -59,7 +59,30 @@ def customer_detail(request, id):
     except Listing.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
     
+@api_view(['GET'])
+def get_create_customer(request, id):
+    identifier = '+' + str(id)
+    print(identifier)
+    
+    # get_or_create returns a tuple: (instance, created)
+    customer, created = Customer.objects.get_or_create(phone_number=identifier)
+    
+    # Pass the customer instance to the serializer
+    serializer = CustomerSerializer(customer)
+    
+    return Response(serializer.data)
 
+
+@api_view(['GET'])
+def get_customer_email(request, id):    
+    # get_or_create returns a tuple: (instance, created)
+    customer, created = Customer.objects.get_or_create(email=id)
+    
+    # Pass the customer instance to the serializer
+    serializer = CustomerSerializer(customer)
+    
+    return Response(serializer.data)
+    
 """ @api_view(['GET, POST, DELETE'])
 def retrieve_customer(request, identifier):
 

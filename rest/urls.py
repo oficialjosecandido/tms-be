@@ -12,10 +12,9 @@ urlpatterns = [
 
     # customers
     path('create-customer/', views.create_customer, name='create_customer'),
-    # path('customer/<str:identifier>/', views.get_customer, name='get_customer'),
-    path('customer/', views.get_customer, name='get_customer'),
+    path('get-customer/<int:id>/', viewscustomers.get_create_customer, name='get_customer'),
+    path('email-customer/<str:id>/', viewscustomers.get_customer_email, name='email_customer'),
     path('customer/<int:id>/', viewscustomers.customer_detail, name='customer_detail'),
-    # path('phone-customer/<str:identifier>', views.get_customer, name='phone_customer'),
     
     # listings
     path('listings/', views.listings, name='listings'),
