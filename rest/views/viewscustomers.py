@@ -3,6 +3,10 @@ from rest_framework.decorators import api_view, permission_classes
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.permissions import AllowAny
 from rest_framework import status
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.conf import settings
 from rest.serializers import *
 from ..models import *
 from django.http import JsonResponse
@@ -82,6 +86,40 @@ def get_customer_email(request, id):
     serializer = CustomerSerializer(customer)
     
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def request_withdraw(request):
+    customer_id = request.data.get('customerId')
+    try:
+        customer = Customer.objects.get(id=customer_id)
+
+        # send mail to customer
+        subject = 'Withdraw Funds Request'
+        message = render_to_string('emails/request_withdraw.html', {
+            'customer_name': customer.display_name,
+            'balance': customer.balance
+        })
+        plain_message = strip_tags(message)
+        from_email = settings.EMAIL_HOST_USER
+        to_email = [customer.email]
+        send_mail(subject, plain_message, from_email, to_email, html_message=message)
+
+        # send mail to customer
+        subject = 'Withdraw Funds Request'
+        message = render_to_string('emails/request_withdraw.html', {
+            'customer_name': customer.email,
+            'balance': customer.balance
+        })
+        plain_message = strip_tags(message)
+        from_email = settings.EMAIL_HOST_USER
+        to_email = [customer.email]
+        send_mail(subject, plain_message, from_email, to_email, html_message=message)
+
+        
+        return Response({"message": "Withdrawal request sent successfully."})
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found."}, status=404)
     
 """ @api_view(['GET, POST, DELETE'])
 def retrieve_customer(request, identifier):
