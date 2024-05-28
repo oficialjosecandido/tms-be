@@ -15,6 +15,7 @@ urlpatterns = [
     path('get-customer/<int:id>/', viewscustomers.get_create_customer, name='get_customer'),
     path('email-customer/<str:id>/', viewscustomers.get_customer_email, name='email_customer'),
     path('customer/<int:id>/', viewscustomers.customer_detail, name='customer_detail'),
+    path('request-withdraw/', viewscustomers.request_withdraw, name='request-withdraw'),
     
     # listings
     path('listings/', views.listings, name='listings'),
