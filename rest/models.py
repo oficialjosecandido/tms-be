@@ -102,9 +102,9 @@ class Listing(models.Model):
 
 class Transaction(models.Model):
     STATUS_CHOICES = [
-        ('Pending', 'Pending'),
-        ('Done', 'Done'),
-        ('Rejected', 'Rejected'),
+        ('Payment Initiated', 'Payment Initiated'),
+        ('Payment on Hold', 'Payment on Hold'),
+        ('Payout Completed', 'Payout Completed'),
     ]
 
     amount = models.IntegerField(null=True, blank=True)
