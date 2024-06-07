@@ -89,6 +89,9 @@ class Listing(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Approved')
     created_at = models.DateTimeField(auto_now_add=True)
     asking_price = models.IntegerField(default=0, null=True, blank=True)
+    serial_number = models.CharField(max_length=1000, null=True, blank=True)
+    other_accessories = models.CharField(max_length=1000, null=True, blank=True)
+    other_condition = models.CharField(max_length=1000, null=True, blank=True)
     image = models.FileField(upload_to=customer_image_upload_path, blank=True, null=True)
 
     def save_images(self, images):

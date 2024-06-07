@@ -19,7 +19,7 @@ urlpatterns = [
     
     # listings
     path('listings/', views.listings, name='listings'),
-    path('newlisting', views.new_listing, name='newlisting'),
+    path('newlisting', viewslistings.create_listing, name='newlisting'),
     path('mylistings/<str:identifier>/', viewslistings.my_listings, name='get_mylistings'),
     path('update-listing/<int:id>/', viewslistings.update_listing_status, name='newlisting'),
     path('upload-images/', views.upload_images, name='upload_images'),

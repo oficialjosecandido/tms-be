@@ -36,7 +36,7 @@ def my_listings(request, identifier):
     except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
     
-
+@csrf_exempt  
 @api_view(['POST'])
 def create_listing(request):
     if request.method == 'POST':
@@ -58,6 +58,10 @@ def create_listing(request):
             bike_options = {option['name']: option['isChecked'] for option in bike_data.get('bikeOptions', [])}
             bike_options_json = json.dumps(bike_options)
             bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in bike_data.get('bikeAccessories', [])})
+
+            serial_number = bike_data.get('serial_number')
+            other_accessories = bike_data.get('bike_accessories_other')
+            other_condition = bike_data.get('bike_condition_other')
 
             # Check if "Bike does not turn on" option is true
             if bike_options.get('Bike does not turn on', False):
@@ -96,6 +100,9 @@ def create_listing(request):
                 asking_price=asking_price,
                 status=status,
                 customer=customer,
+                serial_number = serial_number,
+                other_accessories = other_accessories,
+                other_condition = other_condition
             )
 
             # Send email notification to the user
