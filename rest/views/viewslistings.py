@@ -30,16 +30,15 @@ def my_listings(request, identifier):
     customer = Customer.objects.get(email=identifier)
 
     try:
-        listings = Listing.objects.filter(customer=customer)
+        listings = Listing.objects.filter(customer=customer).order_by('-created_at')
         serializer = ListingSerializer(listings, many=True)
         return Response(serializer.data)
     except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
     
-
+@csrf_exempt  
 @api_view(['POST'])
 def create_listing(request):
-    # print(request.body)
     if request.method == 'POST':
         try:
             # Decode the JSON data from the request body
@@ -48,7 +47,7 @@ def create_listing(request):
             
             # Extract bike Info
             bike_data = data.get('bikeInfo')
-            model = bike_data.get('model')
+            model = bike_data.get('pelotonModel')
             asking_price = bike_data.get('askingPrice')
             buy_date = bike_data.get('buyDate')
             buy_date = convert_buy_date_format(buy_date)
@@ -56,19 +55,19 @@ def create_listing(request):
             bike_condition = bike_data.get('bikeCondition')
             bike_condition = convert_bike_condition_format(bike_condition)
 
-            bike_options = json.dumps({option['name']: option['isChecked'] for option in bike_data.get('bikeOptions', [])})
+            bike_options = {option['name']: option['isChecked'] for option in bike_data.get('bikeOptions', [])}
+            bike_options_json = json.dumps(bike_options)
             bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in bike_data.get('bikeAccessories', [])})
 
-            # Check if "Cracked or Broken Screen" option is true
-            # cracked_or_broken_screen = bike_data.get('bikeOptions', {}).get('Craked or Broken Screen', False)
+            serial_number = bike_data.get('serial_number')
+            other_accessories = bike_data.get('bike_accessories_other')
+            other_condition = bike_data.get('bike_condition_other')
 
-            # Set the status based on the condition
-            """ if cracked_or_broken_screen:
+            # Check if "Bike does not turn on" option is true
+            if bike_options.get('Bike does not turn on', False):
                 status = 'Rejected'
             else:
-                status = 'Approved' """
-
-            status = 'Approved'
+                status = 'Approved'
 
             # Extract customer info
             customer_info = data.get('customerInfo')
@@ -96,19 +95,22 @@ def create_listing(request):
                 model=model,
                 buy_date=buy_date,
                 bike_condition=bike_condition,
-                bike_options=bike_options,
+                bike_options=bike_options_json,
                 bike_accessories=bike_accessories,
                 asking_price=asking_price,
                 status=status,
                 customer=customer,
+                serial_number = serial_number,
+                other_accessories = other_accessories,
+                other_condition = other_condition
             )
 
             # Send email notification to the user
             subject = 'Listing Created and Pending Approval'
             message = render_to_string('emails/create_listing_success.html', {
                 'listing_id': listing.id,
-                'customer_name': data.get('name'),
-                'dashboard_link': 'https://www.tms.com/dashboard/listing/' + str(listing.id)
+                'customer_name': customer.display_name,
+                'dashboard_link': 'https://www.tms.com/seller/listings/' + str(listing.id)
             })
             plain_message = strip_tags(message)
             from_email = settings.EMAIL_HOST_USER
@@ -133,6 +135,7 @@ def create_listing(request):
     else:
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
+
 
 @api_view(['POST'])
 def my_images(request):
