@@ -61,9 +61,9 @@ def new_payment(request):
     response = new_payment_order(request)
     return response
 
-def get_mypayments(request, identifier):
+""" def get_mypayments(request, identifier):
     response = my_payments(request, identifier)
-    return response
+    return response """
 
 def get_myreceivals(request, identifier):
     response = my_receivals(request, identifier)

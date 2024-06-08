@@ -38,6 +38,7 @@ def get_transactions(request, listing_id):
 
 @api_view(['GET'])
 def my_payments(request, identifier):
+    print(identifier)
     try:
         transactions = Transaction.objects.filter(seller_email=identifier)
         serializer = TransactionsSerializer(transactions, many=True)

@@ -30,7 +30,7 @@ urlpatterns = [
     # transactions
     path('charge/', views.stripe_charge, name='charge'),
     path('new_payment', views.new_payment, name='new_payment'),
-    path('payments/<str:identifier>/', views.get_mypayments, name='get_mypayments'),
+    path('payments/<str:identifier>/', viewstransactions.my_payments, name='get_mypayments'),
     path('receivals/<str:identifier>/', views.get_myreceivals, name='get_myreceivals'),
     path('listing/<int:listing_id>/transactions/', views.listing_transactions, name='get_transactions'),
 
