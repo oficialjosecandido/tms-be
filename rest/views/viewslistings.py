@@ -52,6 +52,8 @@ def create_listing(request):
             buy_date = bike_data.get('buyDate')
             buy_date = convert_buy_date_format(buy_date)
 
+
+
             bike_condition = bike_data.get('bikeCondition')
             bike_condition = convert_bike_condition_format(bike_condition)
 
@@ -59,9 +61,9 @@ def create_listing(request):
             bike_options_json = json.dumps(bike_options)
             bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in bike_data.get('bikeAccessories', [])})
 
-            serial_number = bike_data.get('serial_number')
-            other_accessories = bike_data.get('bike_accessories_other')
-            other_condition = bike_data.get('bike_condition_other')
+            serial_number = bike_data.get('serialNumber')
+            other_accessories = bike_data.get('otherCondition')
+            other_condition = bike_data.get('otherAccessories')
 
             # Check if "Bike does not turn on" option is true
             if bike_options.get('Bike does not turn on', False):
