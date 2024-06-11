@@ -79,9 +79,18 @@ class Listing(models.Model):
         ('Very good (51-200 Rides)', 'Very good (51-200 Rides)'),
         ('Excellent (0 - 50 Rides)', 'Excellent (0 - 50 Rides)')
     ]
+
+    QUEUE_ORDER = [
+        ('TMS', 'TMS'),
+        ('Promoted', 'Promoted'),
+        ('Normal', 'Normal'),
+    ]
+
     model = models.CharField(max_length=100, null=True, blank=True)
     buy_date = models.CharField(max_length=100, choices=BUY_DATE_CHOICES, blank=True, null=True)
     bike_condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
+    queue_order = models.CharField(max_length=100, choices=QUEUE_ORDER, blank=True, null=True)
+    location_zipcode = models.CharField(max_length=100, null=True, blank=True)
 
     bike_options = models.JSONField()
     bike_accessories = models.JSONField()
@@ -92,6 +101,7 @@ class Listing(models.Model):
     serial_number = models.CharField(max_length=1000, null=True, blank=True)
     other_accessories = models.CharField(max_length=1000, null=True, blank=True)
     other_condition = models.CharField(max_length=1000, null=True, blank=True)
+    shoes_size = models.CharField(max_length=10, null=True, blank=True)
     image = models.FileField(upload_to=customer_image_upload_path, blank=True, null=True)
 
     def save_images(self, images):
