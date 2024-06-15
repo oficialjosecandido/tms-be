@@ -1,0 +1,5 @@
+
+git fetch origin
+git checkout develop
+git merge seller-bugs  --- this must be the working branch
+git push origin develop
