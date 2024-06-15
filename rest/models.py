@@ -58,6 +58,7 @@ class Customer(models.Model):
 
 class Listing(models.Model):
     STATUS_CHOICES = [
+        ('Pending Confirmation', 'Pending Confirmation'),
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected'),
         ('Pending Pickup', 'Pending Pickup'),

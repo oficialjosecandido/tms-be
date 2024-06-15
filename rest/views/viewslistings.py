@@ -31,6 +31,11 @@ def my_listings(request, identifier):
 
     try:
         listings = Listing.objects.filter(customer=customer).order_by('-created_at')
+        for listing in listings:
+            if listing.status == 'Pending Confirmation':
+                listing.status = 'Approved'
+                print(listing)
+                listing.save()
         serializer = ListingSerializer(listings, many=True)
         return Response(serializer.data)
     except Listing.DoesNotExist:
@@ -69,7 +74,7 @@ def create_listing(request):
             if bike_options.get('Bike does not turn on', False):
                 status = 'Rejected'
             else:
-                status = 'Approved'
+                status = 'Pending Confirmation'
 
             # Extract customer info
             customer_info = data.get('customerInfo')
