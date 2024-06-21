@@ -117,7 +117,7 @@ def create_listing(request):
             message = render_to_string('emails/create_listing_success.html', {
                 'listing_id': listing.id,
                 'customer_name': customer.display_name,
-                'dashboard_link': 'https://www.tms.com/seller/listings/' + str(listing.id)
+                'dashboard_link': 'https://www.tms.com/seller/listing/' + str(listing.id)
             })
             plain_message = strip_tags(message)
             from_email = settings.EMAIL_HOST_USER
