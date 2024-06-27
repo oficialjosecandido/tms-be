@@ -56,6 +56,7 @@ def create_listing(request):
             asking_price = bike_data.get('askingPrice')
             buy_date = bike_data.get('buyDate')
             buy_date = convert_buy_date_format(buy_date)
+            location_zipcode = bike_data.get('zipCode')
 
 
 
@@ -105,6 +106,7 @@ def create_listing(request):
                 bike_options=bike_options_json,
                 bike_accessories=bike_accessories,
                 asking_price=asking_price,
+                location_zipcode = location_zipcode,
                 status=status,
                 customer=customer,
                 serial_number = serial_number,
