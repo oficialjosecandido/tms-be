@@ -11,10 +11,14 @@ import os
 def customer_image_upload_path(instance, filename):
     # Get the customer's email
         customer_email = instance.customer.email
-        # Replace special characters in the email to create a valid folder name
         folder_name = customer_email.replace('@', '_').replace('.', '_')
-        # Construct the file path
         return os.path.join('customer_images', folder_name, filename)
+
+def customer_id_upload_path(instance, filename):
+    # Get the customer's email
+    customer_email = instance.email
+    folder_name = customer_email.replace('@', '_').replace('.', '_')
+    return os.path.join('customer_images', folder_name, filename)
 
 class CustomUser(AbstractUser):
     # Your custom user model fields go here
@@ -46,11 +50,24 @@ class Customer(models.Model):
     trusted_seller = models.BooleanField(default=False)
     buyer_stars = models.IntegerField(default=0, null=True, blank=True)
     seller_stars = models.IntegerField(default=0, null=True, blank=True)
+
+    address1 = models.CharField(max_length=200, blank=True, null=True)
+    address2 = models.CharField(max_length=200, blank=True, null=True)
+    city = models.CharField(max_length=200, blank=True, null=True)
+    zipcode = models.CharField(max_length=20, blank=True, null=True)
+
     billing_address = models.TextField(blank=True, null=True)
     shipping_address = models.TextField(blank=True, null=True)
     profile_picture = models.FileField(upload_to='profiles/', blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=150, blank=True, null=True, default='Waiting 3rd Party Activation')
+    image = models.FileField(upload_to=customer_id_upload_path, blank=True, null=True)
+
+    def save_images(self, images):
+        for index, image in enumerate(images):
+            file_name = f"customer_{self.id}_id_{index + 1}.jpg" 
+            self.image.save(file_name, image, save=False)
+        self.save()
 
     def __str__(self):
         return f"{self.display_name} - {self.email} was created by {self.created_date} and has a status of {self.status}"

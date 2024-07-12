@@ -84,7 +84,6 @@ def get_customer_email(request, id):
     
     # Pass the customer instance to the serializer
     serializer = CustomerSerializer(customer)
-    
     return Response(serializer.data)
 
 
@@ -121,29 +120,17 @@ def request_withdraw(request):
     except Customer.DoesNotExist:
         return Response({"error": "Customer not found."}, status=404)
     
-""" @api_view(['GET, POST, DELETE'])
-def retrieve_customer(request, identifier):
-
-    print(1111, identifier)
-    try:
-        # Check if the identifier is an email address
-        if '@' in identifier:
-            print('identifier is an email', identifier)
-            customer, created = Customer.objects.get_or_create(email=identifier)
-        # Check if the identifier is a phone number
-        else:
-            print('identifier is phone number', identifier)
-            identifier.replace('identifier-', '+')
-            # identifier = '+' + identifier
-            # Try to get the customer by phone number
-            print(identifier)
-            customer, created = Customer.objects.get_or_create(phone_number=identifier)
-            print('customer here....', customer)
-        
-        # Serialize the customer data
-        serializer = CustomerSerializer(customer)
-        # Return the serialized data with appropriate status code
-        return Response(serializer.data, status=status.HTTP_200_OK if not created else status.HTTP_201_CREATED)
-    except Exception as e:
-        # Handle any exceptions that might occur during the process
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR) """
+@api_view(['POST'])
+def upload_id(request):
+    if request.method == 'POST' and request.FILES.getlist('images'):
+        images = request.FILES.getlist('images')
+        customer_email = request.POST.get('email')
+        try:
+            customer = Customer.objects.get(email=customer_email)
+            customer.save_images(images)
+            return JsonResponse({'message': 'Images uploaded successfully'}, status=201)
+        except Listing.DoesNotExist:
+            return JsonResponse({'error': 'Customer not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'No images provided'}, status=400)
+    
