@@ -1,3 +1,4 @@
+from email.message import EmailMessage
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
 from django.views.decorators.csrf import csrf_exempt
@@ -62,7 +63,26 @@ def customer_detail(request, id):
         return Response(serializer.data)
     except Listing.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
-    
+
+@api_view(['PUT'])
+def update_customer(request, id):
+    try:
+        customer = Customer.objects.get(id=id)
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Exclude image field if it's not being updated
+    request_data = request.data.copy()
+    request_data.pop('image', None)
+
+    serializer = CustomerSerializer(customer, data=request_data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
 @api_view(['GET'])
 def get_create_customer(request, id):
     identifier = '+' + str(id)
@@ -131,6 +151,43 @@ def upload_id(request):
             return JsonResponse({'message': 'Images uploaded successfully'}, status=201)
         except Listing.DoesNotExist:
             return JsonResponse({'error': 'Customer not found'}, status=404)
+    else:
+        return JsonResponse({'error': 'No images provided'}, status=400)
+    
+
+@api_view(['POST'])
+def upload_topup(request):
+    if request.method == 'POST' and request.FILES.getlist('images'):
+        images = request.FILES.getlist('images')
+        customer_email = request.POST.get('email')
+
+        # Send email notification to the user
+        subject = 'Listing Created and Pending Approval'
+        message = render_to_string('emails/proof_payment.html', {
+            'customer': customer_email,
+        })
+        plain_message = strip_tags(message)
+        from_email = settings.EMAIL_HOST_USER
+        to_email = [customer_email, 'josevcandido@gmail.com']
+        
+        # Create the email
+        email = EmailMessage(
+            subject,
+            plain_message,
+            from_email,
+            to_email,
+        )
+        email.content_subtype = 'html'
+
+        # Attach images to the email
+        for image in images:
+            email.attach(image.name, image.read(), image.content_type)
+
+        # Send the email
+        email.send()
+
+        return JsonResponse({'message': 'Proof of payment sent successfully'}, status=201)
+        
     else:
         return JsonResponse({'error': 'No images provided'}, status=400)
     

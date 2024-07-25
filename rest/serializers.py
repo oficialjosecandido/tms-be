@@ -8,32 +8,18 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = '__all__'
 
-
-class Productserializer(serializers.ModelSerializer):
+class FileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Listing
-        fields = '__all__'
+        model = File
+        fields = ['file']
 
 class ListingSerializer(serializers.ModelSerializer):
+    images = FileSerializer(many=True, required=False)
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), required=True)
+
     class Meta:
         model = Listing
         fields = '__all__'
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-        # Manually handle bike_options serialization
-        if 'instance' in kwargs:
-            # Check if instance is provided
-            instance = kwargs['instance']
-            if instance:
-                # Convert bike_options JSON string to Python dictionary
-                self.fields['bike_options'] = serializers.JSONField(source='get_bike_options_display', read_only=True)
-
-    def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        return representation
-    
 
 class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:

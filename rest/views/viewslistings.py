@@ -10,6 +10,7 @@ from django.conf import settings
 from rest_framework.response import Response
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
 
 from rest_framework import viewsets
 
@@ -44,8 +45,10 @@ def my_listings(request, identifier):
 @csrf_exempt  
 @api_view(['POST'])
 def create_listing(request):
+    
     if request.method == 'POST':
         try:
+            print(2222, json.loads(request.body))
             # Decode the JSON data from the request body
             data = json.loads(request.body)
             print(data)
@@ -145,6 +148,42 @@ def create_listing(request):
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
+@api_view(['POST'])
+@csrf_exempt
+def create_listing1(request):
+    # Extract customer_id from request data
+    customer_id = request.data.get('customer_id')
+    
+    # Validate if customer_id is provided
+    if not customer_id:
+        return Response({'error': 'Customer ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        # Get customer instance
+        customer = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+    # Add customer_id to the request data
+    request.data._mutable = True
+    request.data['customer'] = customer_id
+    request.data._mutable = False
+    
+    # Serialize and save the listing
+    serializer = ListingSerializer(data=request.data)
+    
+    if serializer.is_valid():
+        listing = serializer.save(customer=customer)
+        
+        # Handle file uploads
+        files = request.FILES.getlist('files')
+        for file in files:
+            file_instance = File.objects.create(file=file)
+            listing.images.add(file_instance)
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def my_images(request):

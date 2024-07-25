@@ -18,11 +18,13 @@ urlpatterns = [
 
     #new customers
     path('upload-id/', viewscustomers.upload_id, name='upload_id'),
+    path('upload-topup/', viewscustomers.upload_topup, name='upload_id'),
     path('email-customer/<str:id>/', viewscustomers.get_customer_email, name='email_customer'),
+    path('customer/update/<int:id>/', viewscustomers.update_customer, name='update_customer'),
     
     # listings
     path('listings/', views.listings, name='listings'),
-    path('newlisting', viewslistings.create_listing, name='newlisting'),
+    path('newlisting', viewslistings.create_listing1, name='newlisting'),
     path('mylistings/<str:identifier>/', viewslistings.my_listings, name='get_mylistings'),
     path('update-listing/<int:id>/', viewslistings.update_listing_status, name='newlisting'),
     path('upload-images/', views.upload_images, name='upload_images'),

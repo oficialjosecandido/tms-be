@@ -45,6 +45,7 @@ class Customer(models.Model):
     display_name = models.CharField(max_length=500, blank=True, null=True)
     email = models.CharField(max_length=500)
     phone_number = models.CharField(max_length=100, blank=True, null=True)
+    vat = models.CharField(max_length=20, blank=True, null=True)
     balance = models.IntegerField(default=0, null=True, blank=True)
     trusted_buyer = models.BooleanField(default=False)
     trusted_seller = models.BooleanField(default=False)
@@ -56,12 +57,13 @@ class Customer(models.Model):
     city = models.CharField(max_length=200, blank=True, null=True)
     zipcode = models.CharField(max_length=20, blank=True, null=True)
 
-    billing_address = models.TextField(blank=True, null=True)
-    shipping_address = models.TextField(blank=True, null=True)
-    profile_picture = models.FileField(upload_to='profiles/', blank=True, null=True)
     created_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=150, blank=True, null=True, default='Waiting 3rd Party Activation')
     image = models.FileField(upload_to=customer_id_upload_path, blank=True, null=True)
+    valid_id = models.BooleanField(default=False)
+
+    language = models.CharField(max_length=5, null=True, blank=True)
+    currency = models.CharField(max_length=5, null=True, blank=True)
 
     def save_images(self, images):
         for index, image in enumerate(images):
@@ -73,54 +75,49 @@ class Customer(models.Model):
         return f"{self.display_name} - {self.email} was created by {self.created_date} and has a status of {self.status}"
 
 
+class File(models.Model):
+    file = models.FileField(upload_to='uploads/')
+
 class Listing(models.Model):
     STATUS_CHOICES = [
         ('Pending Confirmation', 'Pending Confirmation'),
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected'),
-        ('Pending Pickup', 'Pending Pickup'),
-        ('Pending Delivery', 'Pending Delivery'),
-        ('Delivered', 'Delivered'),
+        ('Pending Payment', 'Pending Payment'),
         ('Sold', 'Sold'),
     ]
 
-    BUY_DATE_CHOICES = [
-        ('Before 2018', 'Before 2018'),
-        ('2018 - 2020', '2018 - 2020'),
-        ('2021 - 2022', '2021 - 2022'),
-        ('2023 to present', '2023 to present')
-    ]
-
     CONDITION_CHOICES = [
-        ('Needs some love', 'Needs some love'),
-        ('Works well (201-500 Rides)', 'Works well (201-500 Rides)'),
-        ('Very good (51-200 Rides)', 'Very good (51-200 Rides)'),
-        ('Excellent (0 - 50 Rides)', 'Excellent (0 - 50 Rides)')
+        ('A', 'A'),
+        ('B', 'B)'),
+        ('C', 'C'),
+        ('D', 'D')
     ]
 
-    QUEUE_ORDER = [
-        ('TMS', 'TMS'),
-        ('Promoted', 'Promoted'),
-        ('Normal', 'Normal'),
-    ]
+    title = models.CharField(max_length=100, null=True, blank=True)
+    brand = models.CharField(max_length=100, null=True, blank=True)
+    category = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Pending Confirmation')
+    created_at = models.DateTimeField(auto_now_add=True)
 
-    model = models.CharField(max_length=100, null=True, blank=True)
-    buy_date = models.CharField(max_length=100, choices=BUY_DATE_CHOICES, blank=True, null=True)
-    bike_condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
-    queue_order = models.CharField(max_length=100, choices=QUEUE_ORDER, blank=True, null=True)
+    buynow_price = models.IntegerField(default=0, null=True, blank=True)
+    starting_price = models.IntegerField(default=0, null=True, blank=True)
+
+    condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
+    excerpt = models.CharField(max_length=300, null=True, blank=True)
+    description = models.TextField(null=True, blank=True)
+    duration = models.CharField(max_length=100, null=True, blank=True)
+    promoted = models.BooleanField(null=True, blank=True, default=False)
+
+
+    location_address1 = models.CharField(max_length=200, null=True, blank=True)
+    location_address2 = models.CharField(max_length=100, null=True, blank=True)
+    location_city = models.CharField(max_length=100, null=True, blank=True)
     location_zipcode = models.CharField(max_length=100, null=True, blank=True)
 
-    bike_options = models.JSONField()
-    bike_accessories = models.JSONField()
+    images = models.ManyToManyField(File, blank=True)
+
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Approved')
-    created_at = models.DateTimeField(auto_now_add=True)
-    asking_price = models.IntegerField(default=0, null=True, blank=True)
-    serial_number = models.CharField(max_length=1000, null=True, blank=True)
-    other_accessories = models.CharField(max_length=1000, null=True, blank=True)
-    other_condition = models.CharField(max_length=1000, null=True, blank=True)
-    shoes_size = models.CharField(max_length=10, null=True, blank=True)
-    image = models.FileField(upload_to=customer_image_upload_path, blank=True, null=True)
 
     def save_images(self, images):
         for index, image in enumerate(images):
@@ -129,7 +126,8 @@ class Listing(models.Model):
         self.save()
 
     def __str__(self):
-        return f'Listing ID: {self.id} with price {self.asking_price}, Customer: {self.customer.display_name}'
+        return f'Listing ID: {self.id} with price {self.starting_price}, Customer: {self.customer.display_name}'
+
 
 class Transaction(models.Model):
     STATUS_CHOICES = [
@@ -159,7 +157,7 @@ class Transaction(models.Model):
     
     def __str__(self):
         return f'Transaction ID: {self.id} with seller: {self.seller_name} and buyer: {self.buyer_name} with status: {self.status} for {self.amount}'
-    
+
 
 class Comment(models.Model):
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='comments')
@@ -169,7 +167,8 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'Comment by {self.name} on listing nº {self.listing.id}'
-    
+
+
 
 
 
