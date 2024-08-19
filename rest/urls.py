@@ -21,6 +21,10 @@ urlpatterns = [
     path('upload-topup/', viewscustomers.upload_topup, name='upload_id'),
     path('email-customer/<str:id>/', viewscustomers.get_customer_email, name='email_customer'),
     path('customer/update/<int:id>/', viewscustomers.update_customer, name='update_customer'),
+
+    # new listings
+    path('listings/', views.listings, name='listings'),
+
     
     # listings
     path('listings/', views.listings, name='listings'),
