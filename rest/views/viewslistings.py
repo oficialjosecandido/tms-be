@@ -200,9 +200,9 @@ def my_images(request):
         return JsonResponse({'error': 'No images provided'}, status=400)
 
 @api_view(['GET'])
-def listing_detail(request, id):
+def listing_detail(request, slug):
     try:
-        listing = Listing.objects.get(id=id)
+        listing = Listing.objects.get(slug=slug)
         serializer = ListingSerializer(listing)
         return Response(serializer.data)
     except Listing.DoesNotExist:

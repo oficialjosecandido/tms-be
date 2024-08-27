@@ -5,4 +5,4 @@ from .models import *
 admin.site.register(Customer)
 admin.site.register(Listing)
 admin.site.register(Transaction)
-admin.site.register(Comment)
+admin.site.register(Bid)

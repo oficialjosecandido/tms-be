@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
+from datetime import datetime
 import os
 
 def customer_image_upload_path(instance, filename):
@@ -95,6 +96,8 @@ class Listing(models.Model):
     ]
 
     title = models.CharField(max_length=100, null=True, blank=True)
+    slug = models.SlugField(unique=True, max_length=200, null=True, blank=True)
+
     brand = models.CharField(max_length=100, null=True, blank=True)
     category = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Pending Confirmation')
@@ -106,9 +109,10 @@ class Listing(models.Model):
     condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
     excerpt = models.CharField(max_length=300, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
+    level = models.IntegerField(null=True, blank=True)
     duration = models.CharField(max_length=100, null=True, blank=True)
     promoted = models.BooleanField(null=True, blank=True, default=False)
-
+    
 
     location_address1 = models.CharField(max_length=200, null=True, blank=True)
     location_address2 = models.CharField(max_length=100, null=True, blank=True)
@@ -119,6 +123,19 @@ class Listing(models.Model):
 
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
 
+    def save(self, *args, **kwargs):
+        if not self.slug and self.title:
+            today_str = datetime.today().strftime('%Y%m%d')
+            base_slug = slugify(self.title)
+            self.slug = f'{base_slug}-{today_str}'
+            
+            # Check if the slug is unique and adjust if necessary
+            existing_slugs = Listing.objects.filter(slug__startswith=self.slug).count()
+            if existing_slugs:
+                self.slug = f'{self.slug}-{existing_slugs + 1}'
+
+        super(Listing, self).save(*args, **kwargs)
+
     def save_images(self, images):
         for index, image in enumerate(images):
             file_name = f"listing_{self.id}_image_{index + 1}.jpg" 
@@ -128,6 +145,15 @@ class Listing(models.Model):
     def __str__(self):
         return f'Listing ID: {self.id} with price {self.starting_price}, Customer: {self.customer.display_name}'
 
+
+class Bid(models.Model):
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='bid')
+    created_at = models.DateTimeField(auto_now_add=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    bid = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return f'New bid on listing: {self.listing.slug} with bid {self.bid} by customer: {self.customer.display_name}'
 
 class Transaction(models.Model):
     STATUS_CHOICES = [
