@@ -2,7 +2,7 @@
 
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import views, viewslistings, viewstransactions, viewscustomers
+from .views import views, viewslistings, viewstransactions, viewscustomers, viewsbids
 
 # Create a router for the CommentViewSet
 """ router = DefaultRouter()
@@ -20,14 +20,19 @@ urlpatterns = [
     path('upload-id/', viewscustomers.upload_id, name='upload_id'),
     path('upload-topup/', viewscustomers.upload_topup, name='upload_id'),
     path('email-customer/<str:id>/', viewscustomers.get_customer_email, name='email_customer'),
-    path('customer/update/<int:id>/', viewscustomers.update_customer, name='update_customer'),
+    path('customer/update/<int:id>/', viewscustomers.update_customer, name='update_customer'), 
 
     # new listings
-    path('listings/', views.listings, name='listings'),
+    path('listings/', viewslistings.all_listings, name='listings'),
+    path('listing/<str:slug>', viewslistings.listing_detail, name='listing_detail'),
 
+
+    # new offers
+    path('bid', viewsbids.post_bid, name='bid'),
+    path('bids/<str:slug>', viewsbids.get_bids, name='bid'),
     
     # listings
-    path('listings/', views.listings, name='listings'),
+    #path('listings/', views.listings, name='listings'),
     path('newlisting', viewslistings.create_listing1, name='newlisting'),
     path('mylistings/<str:identifier>/', viewslistings.my_listings, name='get_mylistings'),
     path('update-listing/<int:id>/', viewslistings.update_listing_status, name='newlisting'),
