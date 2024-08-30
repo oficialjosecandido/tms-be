@@ -21,15 +21,18 @@ urlpatterns = [
     path('upload-topup/', viewscustomers.upload_topup, name='upload_id'),
     path('email-customer/<str:id>/', viewscustomers.get_customer_email, name='email_customer'),
     path('customer/update/<int:id>/', viewscustomers.update_customer, name='update_customer'), 
+    path('my-kpis/<str:email>/', viewscustomers.customer_info, name='my_kpis'), 
 
     # new listings
     path('listings/', viewslistings.all_listings, name='listings'),
     path('listing/<str:slug>', viewslistings.listing_detail, name='listing_detail'),
-
+    path('listing-id/<str:id>', viewslistings.listing_id_detail, name='listing_detail'),
+    path('my-listings/<str:identifier>', viewslistings.my_listings, name='get_mylistings'),
 
     # new offers
     path('bid', viewsbids.post_bid, name='bid'),
     path('bids/<str:slug>', viewsbids.get_bids, name='bid'),
+    path('my-bids/<str:email>', viewsbids.get_my_bids, name='bid'),
     
     # listings
     #path('listings/', views.listings, name='listings'),

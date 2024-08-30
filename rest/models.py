@@ -50,9 +50,8 @@ class Customer(models.Model):
     balance = models.IntegerField(default=0, null=True, blank=True)
     trusted_buyer = models.BooleanField(default=False)
     trusted_seller = models.BooleanField(default=False)
-    buyer_stars = models.IntegerField(default=0, null=True, blank=True)
-    seller_stars = models.IntegerField(default=0, null=True, blank=True)
-
+    rating = models.IntegerField(default=0, null=True, blank=True)
+    
     address1 = models.CharField(max_length=200, blank=True, null=True)
     address2 = models.CharField(max_length=200, blank=True, null=True)
     city = models.CharField(max_length=200, blank=True, null=True)
@@ -147,13 +146,21 @@ class Listing(models.Model):
 
 
 class Bid(models.Model):
+    STATUS_CHOICES = [
+        ('Active', 'Active'),
+        ('Inactive', 'Inactive'),
+        ('Rejected', 'Rejected'),
+        ('Accepted', 'Accepted'),
+    ]
+
     listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='bid')
     created_at = models.DateTimeField(auto_now_add=True)
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     bid = models.IntegerField(null=True, blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Active')
 
     def __str__(self):
-        return f'New bid on listing: {self.listing.slug} with bid {self.bid} by customer: {self.customer.display_name}'
+        return f'New bid on listing: {self.listing.slug} with bid {self.bid} by customer: {self.customer.display_name} with status {self.status}'
 
 class Transaction(models.Model):
     STATUS_CHOICES = [

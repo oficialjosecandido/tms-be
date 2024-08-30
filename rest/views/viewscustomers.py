@@ -81,7 +81,58 @@ def update_customer(request, id):
         return Response(serializer.data)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def customer_info(request, email):
+    try:
+        customer = Customer.objects.get(email=email)
+        
+        # total purchases and total amount in purchases
+        my_purchases = Transaction.objects.filter(buyer_email=customer.email)
+        count_purchases = my_purchases.count()
 
+        total_purchases = 0
+        for purchase in my_purchases:
+            total_purchases = total_purchases + purchase.amount
+            total_purchases.save()
+
+
+        # total sales and total amount in sales
+        my_sales = Transaction.objects.filter(seller_email=customer.email)
+        count_sales = my_sales.count()
+
+        total_sales = 0
+        for sale in my_sales:
+            total_sales = total_sales + sale.amount
+            total_sales.save()
+
+        # active offers
+        my_offers = Bid.objects.filter(customer=customer)
+        active_offers = my_offers.filter(status='Active').count()
+
+        # active listings
+        my_listings = Listing.objects.filter(customer=customer)
+        active_listings = my_listings.filter(status = 'Approved').count()
+
+        # ratings
+        # disputes
+
+        # pending funds
+        # free funds
+
+        customer_data = {
+                'status': customer.status,
+                'balance': customer.balance,
+                'active_listings': active_listings,
+                'active_offers': active_offers,
+                'count_purchases': count_purchases,
+                'total_purchases': total_purchases,
+                'count_sales': count_purchases,
+                'total_sales': total_purchases
+            }
+        
+        return Response(customer_data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=404)
 
 @api_view(['GET'])
 def get_create_customer(request, id):

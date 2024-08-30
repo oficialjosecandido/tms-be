@@ -207,6 +207,16 @@ def listing_detail(request, slug):
         return Response(serializer.data)
     except Listing.DoesNotExist:
         return Response({"error": "Listing not found"}, status=404)
+    
+
+@api_view(['GET'])
+def listing_id_detail(request, id):
+    try:
+        listing = Listing.objects.get(id=id)
+        serializer = ListingSerializer(listing)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=404)
 
 @csrf_exempt    
 @api_view(['POST'])

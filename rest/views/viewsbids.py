@@ -31,7 +31,7 @@ def post_bid(request):
                 customer=customer,
                 bid=bid
             )
-            
+
             # Send email notification to the user
             subject = 'New Bid'
             message = render_to_string('emails/create_listing_success.html', {
@@ -73,6 +73,27 @@ def get_bids(request, slug):
         
         # Get all bids associated with the listing
         bids = Bid.objects.filter(listing=listing)
+        
+        # If no bids are found, return an empty list
+        if not bids.exists():
+            return Response([], status=status.HTTP_200_OK)
+        
+        print(222222, bids)
+        
+        # Serialize the queryset of bids
+        serializer = BidSerializer(bids, many=True)  # Use many=True because filter() returns a queryset
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+
+@api_view(['GET'])
+def get_my_bids(request, email):
+    try:
+        bidder = Customer.objects.get(email=email)
+        # Get all bids associated with the listing
+        bids = Bid.objects.filter(customer=bidder)
         
         # If no bids are found, return an empty list
         if not bids.exists():
