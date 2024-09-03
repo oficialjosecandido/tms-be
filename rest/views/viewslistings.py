@@ -13,6 +13,9 @@ from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
 
 from rest_framework import viewsets
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 @api_view(['GET'])
@@ -42,79 +45,56 @@ def my_listings(request, identifier):
     except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
     
-@csrf_exempt  
+
+@csrf_exempt
 @api_view(['POST'])
 def create_listing(request):
-    
     if request.method == 'POST':
         try:
-            print(2222, json.loads(request.body))
-            # Decode the JSON data from the request body
-            data = json.loads(request.body)
-            print(data)
-            
-            # Extract bike Info
-            bike_data = data.get('bikeInfo')
-            model = bike_data.get('pelotonModel')
-            asking_price = bike_data.get('askingPrice')
-            buy_date = bike_data.get('buyDate')
-            buy_date = convert_buy_date_format(buy_date)
-            location_zipcode = bike_data.get('zipCode')
+            # Extract text data from the request
+            title = request.POST.get('title')
+            category = request.POST.get('category')
+            brand = request.POST.get('brand')
+            buynow_price = request.POST.get('buynow_price')
+            starting_price = 0
+            condition = request.POST.get('condition')
+            excerpt = request.POST.get('excerpt')
+            description = request.POST.get('description')
+            duration = request.POST.get('duration')
+            promoted = request.POST.get('promoted') == 'true'
+            location_address1 = request.POST.get('location_address1')
+            location_address2 = request.POST.get('location_address2')
+            location_city = request.POST.get('location_city')
+            location_zipcode = request.POST.get('location_zipcode')
+            customer_id = request.POST.get('customer_id')
 
+            # Validate required fields
+            if not title or not category or not customer_id:
+                return JsonResponse({'error': 'Missing required fields: title, category, customer_id'}, status=400)
 
-
-            bike_condition = bike_data.get('bikeCondition')
-            bike_condition = convert_bike_condition_format(bike_condition)
-
-            bike_options = {option['name']: option['isChecked'] for option in bike_data.get('bikeOptions', [])}
-            bike_options_json = json.dumps(bike_options)
-            bike_accessories = json.dumps({accessory['name']: accessory['isChecked'] for accessory in bike_data.get('bikeAccessories', [])})
-
-            serial_number = bike_data.get('serialNumber')
-            other_accessories = bike_data.get('otherCondition')
-            other_condition = bike_data.get('otherAccessories')
-
-            # Check if "Bike does not turn on" option is true
-            if bike_options.get('Bike does not turn on', False):
-                status = 'Rejected'
-            else:
-                status = 'Pending Confirmation'
-
-            # Extract customer info
-            customer_info = data.get('customerInfo')
-            customer_data = {
-                'display_name': customer_info.get('name'),
-                'shipping_address': customer_info.get('address'),
-                'email': customer_info.get('email'),
-                'phone_number': customer_info.get('phoneNumber')
-            }
-
-            print(customer_data)
-
-            # Check if a customer with the same email and phone number exists
-            customer = Customer.objects.filter(email=customer_data['email'], phone_number=customer_data['phone_number']).first()
-
-            # If a customer exists, use the existing customer
-            if customer:
-                created = False
-            else:
-                # Otherwise, create a new customer
-                customer, created = Customer.objects.get_or_create(email=customer_data['email'], phone_number=customer_data['phone_number'], defaults=customer_data)
+            # Fetch customer based on ID
+            try:
+                customer = Customer.objects.get(id=customer_id)
+            except Customer.DoesNotExist:
+                return JsonResponse({'error': 'Customer not found'}, status=404)
 
             # Create a new Listing object
             listing = Listing.objects.create(
-                model=model,
-                buy_date=buy_date,
-                bike_condition=bike_condition,
-                bike_options=bike_options_json,
-                bike_accessories=bike_accessories,
-                asking_price=asking_price,
-                location_zipcode = location_zipcode,
-                status=status,
-                customer=customer,
-                serial_number = serial_number,
-                other_accessories = other_accessories,
-                other_condition = other_condition
+                title=title,
+                category=category,
+                brand=brand,
+                buynow_price=buynow_price,
+                starting_price=starting_price,
+                condition=condition,
+                excerpt=excerpt,
+                description=description,
+                duration=duration,
+                promoted=promoted,
+                location_address1=location_address1,
+                location_address2=location_address2,
+                location_city=location_city,
+                location_zipcode=location_zipcode,
+                customer=customer
             )
 
             # Send email notification to the user
@@ -134,56 +114,22 @@ def create_listing(request):
                 'id': listing.id,
                 'customer': {
                     'name': customer.display_name,
-                    'address': customer.shipping_address,
                     'email': customer.email,
                     'phone_number': customer.phone_number
                 },
                 'status': listing.status,
                 'created_at': listing.created_at.strftime('%Y-%m-%d %H:%M:%S')
             }}, status=201)
+
         except Exception as e:
+            # Log the error for debugging
+            print(e)
             # Return an error response if something goes wrong
-            return JsonResponse({'error': str(e)}, status=400)
+            return JsonResponse({'error': str(e)}, status=500)
     else:
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
 
-@api_view(['POST'])
-@csrf_exempt
-def create_listing1(request):
-    # Extract customer_id from request data
-    customer_id = request.data.get('customer_id')
-    
-    # Validate if customer_id is provided
-    if not customer_id:
-        return Response({'error': 'Customer ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    try:
-        # Get customer instance
-        customer = Customer.objects.get(id=customer_id)
-    except Customer.DoesNotExist:
-        return Response({'error': 'Customer not found'}, status=status.HTTP_404_NOT_FOUND)
-    
-    # Add customer_id to the request data
-    request.data._mutable = True
-    request.data['customer'] = customer_id
-    request.data._mutable = False
-    
-    # Serialize and save the listing
-    serializer = ListingSerializer(data=request.data)
-    
-    if serializer.is_valid():
-        listing = serializer.save(customer=customer)
-        
-        # Handle file uploads
-        files = request.FILES.getlist('files')
-        for file in files:
-            file_instance = File.objects.create(file=file)
-            listing.images.add(file_instance)
-        
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 def my_images(request):
