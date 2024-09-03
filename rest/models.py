@@ -46,7 +46,7 @@ class Customer(models.Model):
 
     created_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=150, blank=True, null=True, default='Waiting 3rd Party Activation')
-    image = models.FileField(upload_to='listing_images/', blank=True, null=True)
+    image = models.FileField(upload_to='disposable_info/', blank=True, null=True)
     valid_id = models.BooleanField(default=False)
 
     language = models.CharField(max_length=5, null=True, blank=True)
@@ -58,12 +58,21 @@ class Customer(models.Model):
             self.image.save(file_name, image, save=False)
         self.save()
 
+
+    def get_upload_path(instance, filename):
+        """
+        Function to determine the upload path dynamically.
+        Saves files to: auctions/customer_email/listing_id/filename
+        """
+        
+        return os.path.join('customers', instance.email, filename)
+
+    image = models.ImageField(upload_to=get_upload_path)
+
     def __str__(self):
         return f"{self.display_name} - {self.email} was created by {self.created_date} and has a status of {self.status}"
 
 
-class File(models.Model):
-    file = models.FileField(upload_to='uploads/')
 
 class Listing(models.Model):
     STATUS_CHOICES = [
@@ -139,9 +148,8 @@ class ListingImage(models.Model):
         Function to determine the upload path dynamically.
         Saves files to: auctions/customer_email/listing_id/filename
         """
-        customer_email = instance.listing.customer.email
         listing_id = instance.listing.id
-        return os.path.join('auctions', customer_email, str(listing_id), filename)
+        return os.path.join('auctions', str(listing_id), filename)
 
     image = models.ImageField(upload_to=get_upload_path)
 
@@ -191,15 +199,6 @@ class Transaction(models.Model):
     def __str__(self):
         return f'Transaction ID: {self.id} with seller: {self.seller_name} and buyer: {self.buyer_name} with status: {self.status} for {self.amount}'
 
-
-class Comment(models.Model):
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='comments')
-    name = models.CharField(max_length=100, null=True, blank=True)
-    comment = models.TextField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f'Comment by {self.name} on listing nº {self.listing.id}'
 
 
 

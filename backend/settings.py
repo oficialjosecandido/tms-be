@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-import secrets
+from . import config
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -169,11 +169,12 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STRIPE_SECRET_KEY = config.STRIPE_SECRET_KEY
+AWS_ACCESS_KEY_ID = config.AWS_ACCESS_KEY_ID
+AWS_SECRET_ACCESS_KEY = config.AWS_SECRET_ACCESS_KEY
+AWS_STORAGE_BUCKET_NAME = config.AWS_STORAGE_BUCKET_NAME
+AWS_S3_REGION_NAME = config.AWS_S3_REGION_NAME
 
-AWS_ACCESS_KEY_ID = secrets.AWS_ACCESS_KEY_ID
-AWS_SECRET_ACCESS_KEY = secrets.AWS_SECRET_ACCESS_KEY
-AWS_STORAGE_BUCKET_NAME = secrets.AWS_STORAGE_BUCKET_NAME
-AWS_S3_REGION_NAME = secrets.AWS_S3_REGION_NAME
 AWS_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True

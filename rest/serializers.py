@@ -8,15 +8,8 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = '__all__'
 
-class FileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = File
-        fields = ['file']
 
 class ListingSerializer(serializers.ModelSerializer):
-    images = FileSerializer(many=True, required=False)
-    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), required=True)
-
     class Meta:
         model = Listing
         fields = '__all__'
@@ -36,8 +29,5 @@ class BidSerializer(serializers.ModelSerializer):
         model = Bid
         fields = '__all__'
 
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = '__all__'
+
     
