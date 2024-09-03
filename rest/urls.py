@@ -29,6 +29,7 @@ urlpatterns = [
     path('listing-id/<str:id>', viewslistings.listing_id_detail, name='listing_detail'),
     path('my-listings/<str:identifier>', viewslistings.my_listings, name='get_mylistings'),
     path('create-listing', viewslistings.create_listing, name='create_listing'),
+    path('listing-images/<str:slug>', viewslistings.listing_images, name='listing_images'),
 
     # new offers
     path('bid', viewsbids.post_bid, name='bid'),

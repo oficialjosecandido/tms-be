@@ -128,11 +128,22 @@ class Listing(models.Model):
 
 
 class ListingImage(models.Model):
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='listing_images')
-    image = models.ImageField(upload_to='listing_images/')
+    listing = models.ForeignKey('Listing', on_delete=models.CASCADE, related_name='listing_images')
+    image = models.ImageField(upload_to='listing_images/')  # Update this line
 
     def __str__(self):
         return f'Image for Listing ID: {self.listing.id}'
+
+    def get_upload_path(instance, filename):
+        """
+        Function to determine the upload path dynamically.
+        Saves files to: auctions/customer_email/listing_id/filename
+        """
+        customer_email = instance.listing.customer.email
+        listing_id = instance.listing.id
+        return os.path.join('auctions', customer_email, str(listing_id), filename)
+
+    image = models.ImageField(upload_to=get_upload_path)
 
 class Bid(models.Model):
     STATUS_CHOICES = [

@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework import status
+from django.shortcuts import get_object_or_404
 
 from rest_framework import viewsets
 import logging
@@ -45,6 +46,16 @@ def my_listings(request, identifier):
     except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
     
+
+@api_view(['GET'])
+def listing_images(request, slug):
+    try:
+        listing = get_object_or_404(Listing, slug=slug)
+        images = ListingImage.objects.filter(listing=listing)
+        serializer = ListingImageSerializer(images, many=True)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=404)
 
 @csrf_exempt
 @api_view(['POST'])
@@ -96,6 +107,14 @@ def create_listing(request):
                 location_zipcode=location_zipcode,
                 customer=customer
             )
+
+            # Extract and save image files
+            image_files = request.FILES.getlist('files')  # Assuming 'files' is the key for images in form-data
+            if image_files:
+                for image_file in image_files:
+                    ListingImage.objects.create(listing=listing, image=image_file)
+            else:
+                return JsonResponse({'error': 'No images provided'}, status=400)
 
             # Send email notification to the user
             subject = 'Listing Created and Pending Approval'
