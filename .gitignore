@@ -6,4 +6,4 @@
 env/
 venv/
 # Ignore the secrets file
-# backend/secrets.py
+backend/secrets.py

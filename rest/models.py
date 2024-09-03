@@ -8,19 +8,6 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from datetime import datetime
 import os
-
-def customer_image_upload_path(instance, filename):
-    # Get the customer's email
-        customer_email = instance.customer.email
-        folder_name = customer_email.replace('@', '_').replace('.', '_')
-        return os.path.join('customer_images', folder_name, filename)
-
-def customer_id_upload_path(instance, filename):
-    # Get the customer's email
-    customer_email = instance.email
-    folder_name = customer_email.replace('@', '_').replace('.', '_')
-    return os.path.join('customer_images', folder_name, filename)
-
 class CustomUser(AbstractUser):
     # Your custom user model fields go here
     points = models.IntegerField(default=0)
@@ -51,7 +38,7 @@ class Customer(models.Model):
     trusted_buyer = models.BooleanField(default=False)
     trusted_seller = models.BooleanField(default=False)
     rating = models.IntegerField(default=0, null=True, blank=True)
-    
+
     address1 = models.CharField(max_length=200, blank=True, null=True)
     address2 = models.CharField(max_length=200, blank=True, null=True)
     city = models.CharField(max_length=200, blank=True, null=True)
@@ -59,7 +46,7 @@ class Customer(models.Model):
 
     created_date = models.DateTimeField(auto_now_add=True)
     status = models.CharField(max_length=150, blank=True, null=True, default='Waiting 3rd Party Activation')
-    image = models.FileField(upload_to=customer_id_upload_path, blank=True, null=True)
+    image = models.FileField(upload_to='listing_images/', blank=True, null=True)
     valid_id = models.BooleanField(default=False)
 
     language = models.CharField(max_length=5, null=True, blank=True)
@@ -118,16 +105,17 @@ class Listing(models.Model):
     location_city = models.CharField(max_length=100, null=True, blank=True)
     location_zipcode = models.CharField(max_length=100, null=True, blank=True)
 
-    images = models.ManyToManyField(File, blank=True)
-
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+
+    image = models.ImageField(upload_to='listing_images/')  # Files will be stored in `listing_images/` folder in S3
+
 
     def save(self, *args, **kwargs):
         if not self.slug and self.title:
             today_str = datetime.today().strftime('%Y%m%d')
             base_slug = slugify(self.title)
             self.slug = f'{base_slug}-{today_str}'
-            
+
             # Check if the slug is unique and adjust if necessary
             existing_slugs = Listing.objects.filter(slug__startswith=self.slug).count()
             if existing_slugs:
@@ -135,15 +123,27 @@ class Listing(models.Model):
 
         super(Listing, self).save(*args, **kwargs)
 
-    def save_images(self, images):
-        for index, image in enumerate(images):
-            file_name = f"listing_{self.id}_image_{index + 1}.jpg" 
-            self.image.save(file_name, image, save=False)
-        self.save()
-
     def __str__(self):
         return f'Listing ID: {self.id} with price {self.starting_price}, Customer: {self.customer.display_name}'
 
+
+class ListingImage(models.Model):
+    listing = models.ForeignKey('Listing', on_delete=models.CASCADE, related_name='listing_images')
+    image = models.ImageField(upload_to='listing_images/')  # Update this line
+
+    def __str__(self):
+        return f'Image for Listing ID: {self.listing.id}'
+
+    def get_upload_path(instance, filename):
+        """
+        Function to determine the upload path dynamically.
+        Saves files to: auctions/customer_email/listing_id/filename
+        """
+        customer_email = instance.listing.customer.email
+        listing_id = instance.listing.id
+        return os.path.join('auctions', customer_email, str(listing_id), filename)
+
+    image = models.ImageField(upload_to=get_upload_path)
 
 class Bid(models.Model):
     STATUS_CHOICES = [

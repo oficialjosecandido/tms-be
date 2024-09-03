@@ -21,6 +21,11 @@ class ListingSerializer(serializers.ModelSerializer):
         model = Listing
         fields = '__all__'
 
+class ListingImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ListingImage
+        fields = '__all__'
+
 class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction

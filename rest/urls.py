@@ -28,6 +28,8 @@ urlpatterns = [
     path('listing/<str:slug>', viewslistings.listing_detail, name='listing_detail'),
     path('listing-id/<str:id>', viewslistings.listing_id_detail, name='listing_detail'),
     path('my-listings/<str:identifier>', viewslistings.my_listings, name='get_mylistings'),
+    path('create-listing', viewslistings.create_listing, name='create_listing'),
+    path('listing-images/<str:slug>', viewslistings.listing_images, name='listing_images'),
 
     # new offers
     path('bid', viewsbids.post_bid, name='bid'),
@@ -36,9 +38,8 @@ urlpatterns = [
     
     # listings
     #path('listings/', views.listings, name='listings'),
-    path('newlisting', viewslistings.create_listing1, name='newlisting'),
     path('mylistings/<str:identifier>/', viewslistings.my_listings, name='get_mylistings'),
-    path('update-listing/<int:id>/', viewslistings.update_listing_status, name='newlisting'),
+    path('update-listing/<int:id>/', viewslistings.update_listing_status, name='update_listing'),
     path('upload-images/', views.upload_images, name='upload_images'),
     path('listings/<int:id>/', viewslistings.listing_detail, name='listing_detail'),
     path('create-comment/', viewslistings.create_comment, name='create-comment'),
