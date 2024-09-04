@@ -1,16 +1,46 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-us">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Listing Created and Pending Approval</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-55" rel="stylesheet">
+    <title>TMS | Listing Created</title>
 </head>
-<body>
-    <p>Dear {{ customer_name }},</p>
-    <p>Your listing has been successfully created and is pending approval.</p>
-    <p>You can view your listing details on your dashboard by clicking the button below:</p>
-    <a href="{{ dashboard_link }}" style="display: inline-block; padding: 10px 20px; background-color: #007bff; color: #ffffff; text-decoration: none;">Confirm Listing</a>
-    <p>If you have any questions or need further assistance, please feel free to contact us.</p>
-    <p>Thank you for using Trade My Spin!</p>
+<body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: 'Helvetica Neue', Arial, sans-serif;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 10px 0 20px 0;">
+                <img src="https://bucket-movebeyond-rdw-prod-public.s3.eu-north-1.amazonaws.com/rdw/selfservice-portal-webapp/images/logo-move-izi/move-izi-medium.png" width="200" height="40" border="0" alt="MOVE-IZI" style="display:block;margin-top: 20px;margin-bottom: 20px;">
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="background-color: #fff; padding: 25px; border-radius: 24px; box-shadow: 0 2px 8px rgba(73, 73, 73, 0.08);">
+                <h2 style="color: #ff7346; font-size: 16px; font-weight: 900; line-height: 24px; text-align: left;">Hello, {{ customer_name }}</h2>
+                <p style="color: #212529; font-weight: 500; text-align: left;">Your listing was created successfully</p>
+                <p style="color: #212529; font-weight: 500; text-align: left;">
+                    You can view it on our portal clicking on this <a href="{{dashboard_link}}" style="color: #ff7346; text-decoration: none;" target="_blank">link</a>.
+                </p>
+            </td>
+        </tr>
+        <tr>
+            <td align="left" style="padding: 20px 20px;">
+                <p style="color: #212529; font-weight: 500;">Team MOVE-IZI</p>
+                <p style="color: #212529; font-weight: 500; margin: 0; text-align: justify;">Please do not reply to this message.</p>
+                <p style="color: #777; font-size: 14px; line-height: 1.2; margin: 0;">For more information, please contact our Helpline [${move_izi_support_line}], from Monday to Sunday, between 9am and 5pm, or send an email to ${move_izi_support_email}.</p>
+            </td>
+        </tr>
+        <!-- <tr>
+            <td align="center" style="background-color: #dee2e6; padding: 20px; font-size: 16px; font-weight: 500;">
+                <a href="${move_izi_url}" style="color: #044e48; text-decoration: none;">MOVE-IZI</a>
+                <p style="color: #044e48;">Download our app and manage tolls in your fingertips</p>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="background-color: #dee2e6; padding: 10px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
+                <a href="${apple_store_url}" style="text-decoration: none;"><img src="${apple_logo_url}" width="119" height="40" alt="App Store Icon" style="display: inline-block; margin-right: 10px;"></a>
+                <a href="${google_play_url}" style="text-decoration: none;"><img src="${google_logo_url}" width="119" height="40" alt="Google Play Icon" style="display: inline-block; margin-left: 10px;"></a>
+            </td>
+        </tr> -->
+    </table>
 </body>
 </html>

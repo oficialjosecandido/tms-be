@@ -72,7 +72,7 @@ def get_bids(request, slug):
         print(1111111111, listing)
         
         # Get all bids associated with the listing
-        bids = Bid.objects.filter(listing=listing)
+        bids = Bid.objects.filter(listing=listing).order_by('-created_at')
         
         # If no bids are found, return an empty list
         if not bids.exists():

@@ -10,6 +10,7 @@ from django.conf import settings
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 
 @api_view(['GET'])
@@ -25,6 +26,12 @@ def all_listings(request):
 def listing_detail(request, slug):
     try:
         listing = Listing.objects.get(slug=slug)
+        # Check if the close_date has passed
+        if listing.close_date and listing.close_date < timezone.now():
+            # Update the status to 'Closed' if the close_date has passed
+            listing.status = 'Closed'
+            listing.save()
+
         serializer = ListingSerializer(listing)
         return Response(serializer.data)
     except Listing.DoesNotExist:
@@ -66,6 +73,11 @@ def create_listing(request):
             # Validate required fields
             if not title or not category or not customer_id:
                 return JsonResponse({'error': 'Missing required fields: title, category, customer_id'}, status=400)
+            
+            # Validate duration field
+            if duration not in ['3', '7', '30']:
+                duration = 1
+                #return JsonResponse({'error': 'Invalid duration. Must be 3, 7, or 30 days.'}, status=400)
 
             # Fetch customer based on ID
             try:
@@ -100,7 +112,17 @@ def create_listing(request):
             else:
                 return JsonResponse({'error': 'No images provided'}, status=400)
 
-            
+            # Send email notification to the user
+            subject = 'Listing Created and Pending Approval'
+            message = render_to_string('emails/create_listing_success.html', {
+                'customer_name': listing.customer.display_name,
+                'dashboard_link': 'https://www.tms.com/dashboard/listing/' + str(listing.id)
+            })
+            plain_message = strip_tags(message)
+            from_email = settings.EMAIL_HOST_USER
+            to_email = [customer.email]
+            send_mail(subject, plain_message, from_email, to_email, html_message=message)
+
 
             # Return a JSON response including the created listing
             return JsonResponse({'message': 'Listing created successfully', 'listing': {
