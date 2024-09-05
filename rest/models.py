@@ -45,7 +45,7 @@ class Customer(models.Model):
     zipcode = models.CharField(max_length=20, blank=True, null=True)
 
     created_date = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=150, blank=True, null=True, default='Waiting 3rd Party Activation')
+    status = models.CharField(max_length=150, blank=True, null=True, default='Active')
     image = models.FileField(upload_to='disposable_info/', blank=True, null=True)
     valid_id = models.BooleanField(default=False)
 
@@ -102,7 +102,7 @@ class Listing(models.Model):
 
     brand = models.CharField(max_length=100, null=True, blank=True)
     category = models.CharField(max_length=100, null=True, blank=True)
-    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Pending Confirmation')
+    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Approved')
     created_at = models.DateTimeField(auto_now_add=True)
     close_date = models.DateTimeField(null=True, blank=True, db_index=True) 
 
