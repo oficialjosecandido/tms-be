@@ -10,6 +10,7 @@ from django.conf import settings
 from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 
 
 @api_view(['GET'])
@@ -25,6 +26,12 @@ def all_listings(request):
 def listing_detail(request, slug):
     try:
         listing = Listing.objects.get(slug=slug)
+        # Check if the close_date has passed
+        if listing.close_date and listing.close_date < timezone.now():
+            # Update the status to 'Closed' if the close_date has passed
+            listing.status = 'Closed'
+            listing.save()
+
         serializer = ListingSerializer(listing)
         return Response(serializer.data)
     except Listing.DoesNotExist:
@@ -51,7 +58,7 @@ def create_listing(request):
             category = request.POST.get('category')
             brand = request.POST.get('brand')
             buynow_price = request.POST.get('buynow_price')
-            starting_price = 0
+            starting_price = request.POST.get('starting_price')
             condition = request.POST.get('condition')
             excerpt = request.POST.get('excerpt')
             description = request.POST.get('description')
@@ -66,12 +73,21 @@ def create_listing(request):
             # Validate required fields
             if not title or not category or not customer_id:
                 return JsonResponse({'error': 'Missing required fields: title, category, customer_id'}, status=400)
+            
+            # Validate duration field
+            if duration not in ['3', '7', '30']:
+                duration = 1
+                #return JsonResponse({'error': 'Invalid duration. Must be 3, 7, or 30 days.'}, status=400)
 
             # Fetch customer based on ID
             try:
                 customer = Customer.objects.get(id=customer_id)
             except Customer.DoesNotExist:
                 return JsonResponse({'error': 'Customer not found'}, status=404)
+            
+            # Extract and save image files
+            image_files = request.FILES.getlist('files')  # Assuming 'files' is the key for images in form-data
+            
 
             # Create a new Listing object
             listing = Listing.objects.create(
@@ -89,11 +105,11 @@ def create_listing(request):
                 location_address2=location_address2,
                 location_city=location_city,
                 location_zipcode=location_zipcode,
+                image = image_files[0],
                 customer=customer
             )
 
-            # Extract and save image files
-            image_files = request.FILES.getlist('files')  # Assuming 'files' is the key for images in form-data
+            #save image files
             if image_files:
                 for image_file in image_files:
                     ListingImage.objects.create(listing=listing, image=image_file)
@@ -101,6 +117,18 @@ def create_listing(request):
                 return JsonResponse({'error': 'No images provided'}, status=400)
 
             
+
+            # Send email notification to the user
+            subject = 'Listing Created and Pending Approval'
+            message = render_to_string('emails/create_listing_success.html', {
+                'customer_name': listing.customer.display_name,
+                'dashboard_link': 'https://trademyspin.web.app/listing/' + str(listing.slug)
+            })
+            plain_message = strip_tags(message)
+            from_email = settings.EMAIL_HOST_USER
+            to_email = [customer.email]
+            send_mail(subject, plain_message, from_email, to_email, html_message=message)
+
 
             # Return a JSON response including the created listing
             return JsonResponse({'message': 'Listing created successfully', 'listing': {

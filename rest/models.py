@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils.text import slugify
 from django.db.models.signals import pre_save
 from django.dispatch import receiver
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 class CustomUser(AbstractUser):
     # Your custom user model fields go here
@@ -79,15 +79,22 @@ class Listing(models.Model):
         ('Pending Confirmation', 'Pending Confirmation'),
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected'),
+        ('Closed', 'Closed'),
         ('Pending Payment', 'Pending Payment'),
         ('Sold', 'Sold'),
     ]
 
     CONDITION_CHOICES = [
         ('A', 'A'),
-        ('B', 'B)'),
+        ('B', 'B'),
         ('C', 'C'),
         ('D', 'D')
+    ]
+
+    DURATION_CHOICES = [
+        ('3', '3 Days'),
+        ('7', '7 Days'),
+        ('30', '30 Days'),
     ]
 
     title = models.CharField(max_length=100, null=True, blank=True)
@@ -97,6 +104,7 @@ class Listing(models.Model):
     category = models.CharField(max_length=100, null=True, blank=True)
     status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Pending Confirmation')
     created_at = models.DateTimeField(auto_now_add=True)
+    close_date = models.DateTimeField(null=True, blank=True, db_index=True) 
 
     buynow_price = models.IntegerField(default=0, null=True, blank=True)
     starting_price = models.IntegerField(default=0, null=True, blank=True)
@@ -123,17 +131,22 @@ class Listing(models.Model):
         if not self.slug and self.title:
             today_str = datetime.today().strftime('%Y%m%d')
             base_slug = slugify(self.title)
-            self.slug = f'{base_slug}-{today_str}'
+            self.slug = f'{base_slug}'
 
             # Check if the slug is unique and adjust if necessary
             existing_slugs = Listing.objects.filter(slug__startswith=self.slug).count()
             if existing_slugs:
                 self.slug = f'{self.slug}-{existing_slugs + 1}'
 
+            # Calculate close date based on duration
+            if self.duration and not self.close_date:
+                days = int(self.duration)
+                self.close_date = datetime.now() + timedelta(days=days)
+
         super(Listing, self).save(*args, **kwargs)
 
     def __str__(self):
-        return f'Listing ID: {self.id} with price {self.starting_price}, Customer: {self.customer.display_name}'
+        return f'Listing ID: {self.slug} with price {self.starting_price} is status {self.status} and closes at {self.close_date}'
 
 
 class ListingImage(models.Model):

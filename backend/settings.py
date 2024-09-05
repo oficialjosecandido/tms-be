@@ -149,9 +149,13 @@ CRONJOBS = [
     ('0 0 */2 * *', 'rest.utils.send_listing_reminder_emails'),
 ]
 
-# Media files configuration
 
-
+# Celery settings
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'  # Use Redis as the result backend
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 
 # Email settings
 #EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -159,7 +163,8 @@ EMAIL_BACKEND = 'django_smtp_ssl.SSLEmailBackend'
 
 EMAIL_HOST = 'smtp.zoho.com'
 EMAIL_PORT = 465
-
+EMAIL_HOST_USER =  config.EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = config.EMAIL_HOST_PASSWORD
 # EMAIL_USE_TLS = False
 EMAIL_USE_SSL = True
 
