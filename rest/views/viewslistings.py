@@ -58,7 +58,7 @@ def create_listing(request):
             category = request.POST.get('category')
             brand = request.POST.get('brand')
             buynow_price = request.POST.get('buynow_price')
-            starting_price = 0
+            starting_price = request.POST.get('starting_price')
             condition = request.POST.get('condition')
             excerpt = request.POST.get('excerpt')
             description = request.POST.get('description')
@@ -84,6 +84,10 @@ def create_listing(request):
                 customer = Customer.objects.get(id=customer_id)
             except Customer.DoesNotExist:
                 return JsonResponse({'error': 'Customer not found'}, status=404)
+            
+            # Extract and save image files
+            image_files = request.FILES.getlist('files')  # Assuming 'files' is the key for images in form-data
+            
 
             # Create a new Listing object
             listing = Listing.objects.create(
@@ -101,22 +105,24 @@ def create_listing(request):
                 location_address2=location_address2,
                 location_city=location_city,
                 location_zipcode=location_zipcode,
+                image = image_files[0],
                 customer=customer
             )
 
-            # Extract and save image files
-            image_files = request.FILES.getlist('files')  # Assuming 'files' is the key for images in form-data
+            #save image files
             if image_files:
                 for image_file in image_files:
                     ListingImage.objects.create(listing=listing, image=image_file)
             else:
                 return JsonResponse({'error': 'No images provided'}, status=400)
 
+            
+
             # Send email notification to the user
             subject = 'Listing Created and Pending Approval'
             message = render_to_string('emails/create_listing_success.html', {
                 'customer_name': listing.customer.display_name,
-                'dashboard_link': 'https://www.tms.com/dashboard/listing/' + str(listing.id)
+                'dashboard_link': 'https://trademyspin.web.app/listing/' + str(listing.slug)
             })
             plain_message = strip_tags(message)
             from_email = settings.EMAIL_HOST_USER

@@ -86,7 +86,7 @@ class Listing(models.Model):
 
     CONDITION_CHOICES = [
         ('A', 'A'),
-        ('B', 'B)'),
+        ('B', 'B'),
         ('C', 'C'),
         ('D', 'D')
     ]
@@ -131,7 +131,7 @@ class Listing(models.Model):
         if not self.slug and self.title:
             today_str = datetime.today().strftime('%Y%m%d')
             base_slug = slugify(self.title)
-            self.slug = f'{base_slug}-{today_str}'
+            self.slug = f'{base_slug}'
 
             # Check if the slug is unique and adjust if necessary
             existing_slugs = Listing.objects.filter(slug__startswith=self.slug).count()

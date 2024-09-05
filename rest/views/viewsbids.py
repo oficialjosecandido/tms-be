@@ -68,18 +68,13 @@ def get_bids(request, slug):
     print(slug)
     try:
         # Get the listing object based on the slug
-        listing = Listing.objects.get(slug=slug)
-        print(1111111111, listing)
-        
+        listing = Listing.objects.get(slug=slug)        
         # Get all bids associated with the listing
         bids = Bid.objects.filter(listing=listing).order_by('-created_at')
-        
         # If no bids are found, return an empty list
         if not bids.exists():
             return Response([], status=status.HTTP_200_OK)
-        
-        print(222222, bids)
-        
+                
         # Serialize the queryset of bids
         serializer = BidSerializer(bids, many=True)  # Use many=True because filter() returns a queryset
         return Response(serializer.data, status=status.HTTP_200_OK)
