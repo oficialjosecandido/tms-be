@@ -49,7 +49,7 @@ class Customer(models.Model):
     image = models.FileField(upload_to='disposable_info/', blank=True, null=True)
     valid_id = models.BooleanField(default=False)
 
-    language = models.CharField(max_length=5, null=True, blank=True)
+    language = models.CharField(max_length=5, null=True, blank=True, default='EN')
     currency = models.CharField(max_length=5, null=True, blank=True)
 
     def save_images(self, images):
@@ -75,6 +75,27 @@ class Customer(models.Model):
 
 
 class Listing(models.Model):
+
+    CATEGORIES = [
+        ('Cars', 'Cars'),
+        ('Motos', 'Motos'),
+        ('Boats', 'Boats'),
+        ('Smartphones and Tablets', 'Smartphones and Tablets'),
+        ('Tech', 'Tech'),
+        ('Fashion', 'Fashion'),
+        ('Furniture', 'Furniture'),
+        ('Deco', 'Deco'),
+        ('Art', 'Art'),
+        ('Jewelry', 'Jewelry'),
+        ('Sports', 'Sports'),
+        ('Real Estate', 'Real Estate'),
+        ('Agriculture', 'Agriculture'),
+        ('Lifestyle', 'Lifestyle'),
+        ('Apparel', 'Apparel'),
+        ('Kids', 'Kids'),
+        ('Gaming', 'Gaming'),
+    ]
+
     STATUS_CHOICES = [
         ('Pending Confirmation', 'Pending Confirmation'),
         ('Approved', 'Approved'),
@@ -101,7 +122,7 @@ class Listing(models.Model):
     slug = models.SlugField(unique=True, max_length=200, null=True, blank=True)
 
     brand = models.CharField(max_length=100, null=True, blank=True)
-    category = models.CharField(max_length=100, null=True, blank=True)
+    category = models.CharField(max_length=100, choices=CATEGORIES)
     status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Approved')
     created_at = models.DateTimeField(auto_now_add=True)
     close_date = models.DateTimeField(null=True, blank=True, db_index=True) 
