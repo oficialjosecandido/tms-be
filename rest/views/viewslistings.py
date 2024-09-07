@@ -69,10 +69,13 @@ def create_listing(request):
             location_city = request.POST.get('location_city')
             location_zipcode = request.POST.get('location_zipcode')
             customer_id = request.POST.get('customer_id')
+            customer_name = request.POST.get('customer_name')
+            customer_email = request.POST.get('customer_email')
+            print(request.POST)
 
             # Validate required fields
-            if not title or not category or not customer_id:
-                return JsonResponse({'error': 'Missing required fields: title, category, customer_id'}, status=400)
+            if not title or not category:
+                return JsonResponse({'error': 'Missing required fields: title, category'}, status=400)
             
             # Validate duration field
             if duration not in ['3', '7', '30']:
@@ -83,7 +86,11 @@ def create_listing(request):
             try:
                 customer = Customer.objects.get(id=customer_id)
             except Customer.DoesNotExist:
-                return JsonResponse({'error': 'Customer not found'}, status=404)
+                customer = Customer.objects.create(
+                    email = customer_email,
+                    display_name = customer_name
+                )
+                # return JsonResponse({'error': 'Customer not found'}, status=404)
             
             # Extract and save image files
             image_files = request.FILES.getlist('files')  # Assuming 'files' is the key for images in form-data
