@@ -79,7 +79,7 @@ def create_listing(request):
             
             # Validate duration field
             if duration not in ['3', '7', '30']:
-                duration = 1
+                duration = 30
                 #return JsonResponse({'error': 'Invalid duration. Must be 3, 7, or 30 days.'}, status=400)
 
             # Fetch customer based on ID
@@ -178,6 +178,14 @@ def my_listings(request, identifier):
         return Response({"error": "Listings not found"}, status=404)
     
 
-
+@api_view(['GET'])
+def listings_category(request, categ):
+    try:
+        listings = Listing.objects.filter(category=categ)
+        active_listings = listings.filter(status = 'Approved').order_by('-created_at')
+        serializer = ListingSerializer(active_listings, many=True)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listings not found"}, status=404)
 
 
