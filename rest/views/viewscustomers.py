@@ -35,23 +35,18 @@ def customer_info(request, email):
         customer = Customer.objects.get(email=email)
         
         # total purchases and total amount in purchases
-        my_purchases = Transaction.objects.filter(buyer_email=customer.email)
+        my_purchases = Transaction.objects.filter(buyer=customer)
         count_purchases = my_purchases.count()
 
-        total_purchases = 0
-        for purchase in my_purchases:
-            total_purchases = total_purchases + purchase.amount
-            total_purchases.save()
-
+        # Calculate total purchases amount
+        total_purchases = sum(purchase.amount for purchase in my_purchases)
 
         # total sales and total amount in sales
-        my_sales = Transaction.objects.filter(seller_email=customer.email)
+        my_sales = Transaction.objects.filter(seller=customer)
         count_sales = my_sales.count()
 
-        total_sales = 0
-        for sale in my_sales:
-            total_sales = total_sales + sale.amount
-            total_sales.save()
+        # Calculate total sales amount
+        total_sales = sum(sale.amount for sale in my_sales)
 
         # active offers
         my_offers = Bid.objects.filter(customer=customer)
@@ -59,27 +54,31 @@ def customer_info(request, email):
 
         # active listings
         my_listings = Listing.objects.filter(customer=customer)
-        active_listings = my_listings.filter(status = 'Approved').count()
+        active_listings = my_listings.filter(status='Active').count()
 
-        # ratings
-        # disputes
+        # active disputes
+        my_disputes_seller = Dispute.objects.filter(seller=customer)
+        my_disputes_buyer = Dispute.objects.filter(buyer=customer)
+        active_disputes_seller = my_disputes_seller.filter(status='Active').count()
+        active_disputes_buyer = my_disputes_buyer.filter(status='Active').count()
+        active_disputes = active_disputes_seller + active_disputes_buyer
 
-        # pending funds
-        # free funds
-
+        # Prepare the response data
         customer_data = {
-                'status': customer.status,
-                'balance': customer.balance,
-                'active_listings': active_listings,
-                'active_offers': active_offers,
-                'count_purchases': count_purchases,
-                'total_purchases': total_purchases,
-                'count_sales': count_purchases,
-                'total_sales': total_purchases
-            }
+            'status': customer.status,
+            'balance': customer.balance,
+            'active_listings': active_listings,
+            'active_offers': active_offers,
+            'count_purchases': count_purchases,
+            'total_purchases': total_purchases,
+            'count_sales': count_sales,
+            'total_sales': total_sales,
+            'active_disputes': active_disputes
+        }
         
         return Response(customer_data)
-    except Listing.DoesNotExist:
+
+    except Customer.DoesNotExist:
         return Response({"error": "Customer not found"}, status=404)
 
 
@@ -87,6 +86,16 @@ def customer_info(request, email):
 def get_customer_email(request, id):    
     # get_or_create returns a tuple: (instance, created)
     customer, created = Customer.objects.get_or_create(email=id)
+    
+    # Pass the customer instance to the serializer
+    serializer = CustomerSerializer(customer)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def get_customer_id(request, id):    
+    # get_or_create returns a tuple: (instance, created)
+    customer = Customer.objects.get(id=id)
     
     # Pass the customer instance to the serializer
     serializer = CustomerSerializer(customer)

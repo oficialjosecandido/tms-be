@@ -23,6 +23,21 @@ def all_listings(request):
         return Response({"error": "Listings not found"}, status=404)
 
 @api_view(['GET'])
+def listing_id(request, id):
+    try:
+        listing = Listing.objects.get(id=id)
+        # Check if the close_date has passed
+        if listing.close_date and listing.close_date < timezone.now():
+            # Update the status to 'Closed' if the close_date has passed
+            listing.status = 'Closed'
+            listing.save()
+
+        serializer = ListingSerializer(listing)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=404)
+
+@api_view(['GET'])
 def listing_detail(request, slug):
     try:
         listing = Listing.objects.get(slug=slug)
@@ -169,7 +184,7 @@ def my_listings(request, identifier):
         listings = Listing.objects.filter(customer=customer).order_by('-created_at')
         for listing in listings:
             if listing.status == 'Pending Confirmation':
-                listing.status = 'Approved'
+                listing.status = 'Active'
                 print(listing)
                 listing.save()
         serializer = ListingSerializer(listings, many=True)
@@ -182,7 +197,7 @@ def my_listings(request, identifier):
 def listings_category(request, categ):
     try:
         listings = Listing.objects.filter(category=categ)
-        active_listings = listings.filter(status = 'Approved').order_by('-created_at')
+        active_listings = listings.filter(status = 'Active').order_by('-created_at')
         serializer = ListingSerializer(active_listings, many=True)
         return Response(serializer.data)
     except Listing.DoesNotExist:

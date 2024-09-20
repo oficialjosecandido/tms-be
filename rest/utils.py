@@ -13,8 +13,8 @@ def mark_listings_as_rejected():
     # Calculate the cutoff date (30 days ago)
     cutoff_date = timezone.now() - timezone.timedelta(days=30)
     
-    # Get listings that are still in the "Approved" status and were created more than 30 days ago
-    expired_listings = Listing.objects.filter(status='Approved', created_at__lte=cutoff_date)
+    # Get listings that are still in the "Active" status and were created more than 30 days ago
+    expired_listings = Listing.objects.filter(status='Active', created_at__lte=cutoff_date)
     
     # Update the status of expired listings to "Rejected"
     for listing in expired_listings:
@@ -23,9 +23,9 @@ def mark_listings_as_rejected():
 
 
 def send_listing_reminder_emails():
-    # Get listings created more than 2 days ago and still in "Approved" status
+    # Get listings created more than 2 days ago and still in "Active" status
     two_days_ago = timezone.now() - timedelta(days=2)
-    listings = Listing.objects.filter(created_at__lte=two_days_ago, status='Approved')
+    listings = Listing.objects.filter(created_at__lte=two_days_ago, status='Active')
 
     for listing in listings:
         # Send email notification to the user
