@@ -72,8 +72,6 @@ class Customer(models.Model):
     def __str__(self):
         return f"{self.display_name} - {self.email} was created by {self.created_date} and has a status of {self.status}"
 
-
-
 class Listing(models.Model):
 
     CATEGORIES = [
@@ -95,9 +93,10 @@ class Listing(models.Model):
 
     STATUS_CHOICES = [
         ('Pending Confirmation', 'Pending Confirmation'),
-        ('Approved', 'Approved'),
+        ('Active', 'Active'),
         ('Rejected', 'Rejected'),
         ('Closed', 'Closed'),
+        ('On hold', 'On hold'), #If no offer was accepted and listing was closed 48h ago
         ('Pending Payment', 'Pending Payment'),
         ('Sold', 'Sold'),
     ]
@@ -120,7 +119,7 @@ class Listing(models.Model):
 
     brand = models.CharField(max_length=100, null=True, blank=True)
     category = models.CharField(max_length=100, choices=CATEGORIES)
-    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Approved')
+    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Active')
     created_at = models.DateTimeField(auto_now_add=True)
     close_date = models.DateTimeField(null=True, blank=True, db_index=True) 
 
@@ -203,32 +202,51 @@ class Bid(models.Model):
 
 class Transaction(models.Model):
     STATUS_CHOICES = [
-        ('Payment Initiated', 'Payment Initiated'),
-        ('Payment on Hold', 'Payment on Hold'),
-        ('Payout Completed', 'Payout Completed'),
+        ('Waiting Payment/Delivery', 'Waiting Payment/Delivery'),
+        ('Payment Confirmed', 'Payment Confirmed'),
+        ('Delivery Confirmed', 'Delivery Confirmed'),
+        ('Transaction completed', 'Transaction Completed'),
+        ('Transaction on Dispute', 'Transaction on Dispute'),
     ]
-
+    serial_number = models.CharField(max_length=200, null=True, blank=True)
     amount = models.IntegerField(null=True, blank=True)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Waiting Payment/Delivery')
+    buyer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='buyer')
+    seller = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='seller')
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='product')
     
-    # Seller information
-    seller_name = models.CharField(max_length=100)
-    seller_email = models.EmailField()
-    seller_phone_number = models.CharField(max_length=20)
-    
-    # Buyer information
-    buyer_name = models.CharField(max_length=100)
-    buyer_email = models.EmailField()
-    buyer_phone_number = models.CharField(max_length=20)
+    # Dates
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateField(auto_now=True)
 
-    items = models.CharField(max_length=200, blank=True, null=True)
+    # Closing
+    delivered = models.BooleanField(default=False, blank=True, null=True)
+    paid = models.BooleanField(default=False, blank=True, null=True)
+    
+    def __str__(self):
+        return f'Transaction ID: {self.serial_number} with seller: {self.seller.email} and buyer: {self.buyer.email} with status: {self.status} for {self.amount}'
+    
+
+class Dispute(models.Model):
+    STATUS_CHOICES = [
+        ('Dispute Initiated', 'Dispute Initiated'),
+        ('Dispute in Analysis', 'Dispute in Analysis'),
+        ('Resolved for Buyer', 'Resolved for Buyer'),
+        ('Resolved for Seller', 'Resolved for Seller')
+    ]
+    transaction_number = models.CharField(max_length=200, null=True, blank=True)
+    amount = models.IntegerField(null=True, blank=True)
+    status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Dispute Initiated')
+    buyer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='buyer_disputed')
+    seller = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='seller_disputed')
+    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='product_disputed')
     
     # Dates
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
     
     def __str__(self):
-        return f'Transaction ID: {self.id} with seller: {self.seller_name} and buyer: {self.buyer_name} with status: {self.status} for {self.amount}'
+        return f'Dispute for: {self.transaction_number} with seller: {self.seller.email} and buyer: {self.buyer.email} with status: {self.status}'
 
 
 
