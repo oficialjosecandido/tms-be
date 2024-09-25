@@ -21,6 +21,7 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 @api_view(['POST'])
 def accept_offer(request):
     data = request.data
+    print('accepting offer', request.data)
     amount = data.get('bid')
     status = 'Waiting Payment/Delivery'
     listing_id = data.get('listing')
@@ -29,11 +30,15 @@ def accept_offer(request):
     seller = listing.customer
     buyer = Customer.objects.get(id=data.get('customer'))
 
+    print(222, listing, buyer, seller, amount)
+
     serial_number = generate_serial_number()
 
     # Calculate the frozen deposit for both buyer and seller (30% of transaction amount)
     frozen_deposit_buyer = freeze_deposit(amount)
     frozen_deposit_seller = freeze_deposit(amount)
+
+    print(33333, frozen_deposit_seller, frozen_deposit_buyer)
 
     # Check if buyer and seller have enough free deposit
     if buyer.free_deposit < frozen_deposit_buyer:
@@ -59,7 +64,7 @@ def accept_offer(request):
         listing=listing,
         serial_number=serial_number
     )
-
+    
     listing.status = 'Waiting Payment/Delivery'
     listing.save()
 
