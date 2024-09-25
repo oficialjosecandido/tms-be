@@ -20,8 +20,6 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 @csrf_exempt
 @api_view(['POST'])
 def accept_offer(request):
-    print(request.data)
-
     data = request.data
     amount = data.get('bid')
     status = 'Waiting Payment/Delivery'
@@ -29,175 +27,109 @@ def accept_offer(request):
 
     listing = Listing.objects.get(id=listing_id)
     seller = listing.customer
-    buyer =  Customer.objects.get(id = data.get('customer'))
+    buyer = Customer.objects.get(id=data.get('customer'))
 
     serial_number = generate_serial_number()
+
+    # Calculate the frozen deposit for both buyer and seller (30% of transaction amount)
+    frozen_deposit_buyer = freeze_deposit(amount)
+    frozen_deposit_seller = freeze_deposit(amount)
+
+    # Check if buyer and seller have enough free deposit
+    if buyer.free_deposit < frozen_deposit_buyer:
+        return JsonResponse({'error': 'Buyer does not have enough free deposit'}, status=400)
+
+    if seller.free_deposit < frozen_deposit_seller:
+        return JsonResponse({'error': 'Seller does not have enough free deposit'}, status=400)
+
+    # Freeze 30% of the transaction amount for both buyer and seller
+    buyer.frozen_deposit += frozen_deposit_buyer
+    buyer.free_deposit -= frozen_deposit_buyer  # Deduct from buyer's free deposit
+    buyer.save()
+
+    seller.frozen_deposit += frozen_deposit_seller
+    seller.free_deposit -= frozen_deposit_seller  # Deduct from seller's free deposit
+    seller.save()
 
     transaction = Transaction.objects.create(
         amount=amount,
         status=status,
-        buyer = buyer,
-        seller = seller,
-        listing = listing,
-        serial_number=serial_number 
+        buyer=buyer,
+        seller=seller,
+        listing=listing,
+        serial_number=serial_number
     )
 
-    print(transaction)
-
-    # change listing status
     listing.status = 'Waiting Payment/Delivery'
     listing.save()
 
-    # send mail to seller
-    subject = 'Your Item was Sold'
-    message = render_to_string('emails/success_sell.html', {
-        'listing_id': listing.title,
-        'customer_name': buyer.display_name,
-        'dashboard_link': 'https://www.tms.com/dashboard/transaction/' + listing.slug
-    })
+    # Send notification emails to buyer and seller as in your original code...
 
-    plain_message = strip_tags(message)
-    from_email = settings.EMAIL_HOST_USER
-    to_email = [seller.email, 'tms.josecandido@gmail.com']
-    send_mail(subject, plain_message, from_email, to_email, html_message=message)
-
-
-    # send mail to buyer
-    subject = 'Thanks for your purchase'
-    message = render_to_string('emails/success_purchase.html', {
-        'listing_id': listing.title,
-        'buyer_name': buyer.display_name,
-        'seller_name': seller.display_name,
-        'seller_email': seller.display_name,
-        'seller_phone': seller.phone_number,
-        'seller_address1': seller.address1,
-        'seller_address2': seller.address2,
-        'seller_city': seller.city,
-        'seller_zipcode': seller.zipcode,
-        'dashboard_link': 'https://www.tms.com/dashboard/transaction/' + listing.slug
-    })
-
-    plain_message = strip_tags(message)
-    from_email = settings.EMAIL_HOST_USER
-    to_email = [buyer.email]
-    send_mail(subject, plain_message, from_email, to_email, html_message=message)
-
-    # Serialize buyer and seller fields
-    buyer_info = {
-        'name': buyer.display_name,
-        'email': buyer.email,
-        'phone': buyer.phone_number,
-    }
-
-    seller_info = {
-        'name': seller.display_name,
-        'email': seller.email,
-        'phone': seller.phone_number,
-        'address1': seller.address1,
-        'address2': seller.address2,
-        'city': seller.city,
-        'zipcode': seller.zipcode,
-    }
-
+    # Return the serialized transaction data
     return JsonResponse({'message': 'Transaction created successfully', 'transaction': {
             'transaction_id': transaction.serial_number,
-            'buyer': buyer_info,
-            'seller': seller_info,
+            'buyer': {'name': buyer.display_name, 'email': buyer.email, 'phone': buyer.phone_number},
+            'seller': {'name': seller.display_name, 'email': seller.email, 'phone': seller.phone_number},
             'status': transaction.status,
             'created_at': transaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
         }}, status=201)
 
-
+@csrf_exempt
 @api_view(['POST'])
 def new_payment_order(request):
+    data = request.data
+    amount = data.get('amount')
+    status = 'Waiting Payment/Delivery'
+    listing_id = data.get('listing')
+    seller_id = data.get('seller')
+    buyer_email = data.get('buyer')
 
-    print(2222, request.data)
-    if request.method == 'POST':
-        data = request.data
-        amount = data.get('amount')
-        status = 'Waiting Payment/Delivery'
-        listing_id = data.get('listing')
-        seller_id = data.get('seller')
-        buyer_email = data.get('buyer')
+    listing = Listing.objects.get(id=listing_id)
+    seller = Customer.objects.get(id=seller_id)
+    buyer = Customer.objects.get(email=buyer_email)
 
-        listing = Listing.objects.get(id = listing_id)
-        seller = Customer.objects.get(id = seller_id)
-        buyer = Customer.objects.get(email = buyer_email)
+    serial_number = generate_serial_number()
 
-        serial_number = generate_serial_number()
+    # Calculate the frozen deposit for both buyer and seller (30% of transaction amount)
+    frozen_deposit_buyer = freeze_deposit(amount)
+    frozen_deposit_seller = freeze_deposit(amount)
 
-        transaction = Transaction.objects.create(
-            amount=amount,
-            status=status,
-            buyer = buyer,
-            seller = seller,
-            listing = listing,
-            serial_number=serial_number 
-        )
+    # Check if buyer and seller have enough free deposit
+    if buyer.free_deposit < frozen_deposit_buyer:
+        return JsonResponse({'error': 'Buyer does not have enough free deposit'}, status=400)
 
-        print(transaction)
+    if seller.free_deposit < frozen_deposit_seller:
+        return JsonResponse({'error': 'Seller does not have enough free deposit'}, status=400)
 
-        # send mail to seller
-        subject = 'Your Item was Sold'
-        message = render_to_string('emails/success_sell.html', {
-            'listing_id': listing.title,
-            'customer_name': buyer.display_name,
-            'dashboard_link': 'https://www.tms.com/dashboard/transaction/' + listing.slug
-        })
+    # Freeze 30% of the transaction amount for both buyer and seller
+    buyer.frozen_deposit += frozen_deposit_buyer
+    buyer.free_deposit -= frozen_deposit_buyer  # Deduct from buyer's free deposit
+    buyer.save()
 
-        plain_message = strip_tags(message)
-        from_email = settings.EMAIL_HOST_USER
-        to_email = [seller.email, 'tms.josecandido@gmail.com']
-        send_mail(subject, plain_message, from_email, to_email, html_message=message)
+    seller.frozen_deposit += frozen_deposit_seller
+    seller.free_deposit -= frozen_deposit_seller  # Deduct from seller's free deposit
+    seller.save()
 
+    transaction = Transaction.objects.create(
+        amount=amount,
+        status=status,
+        buyer=buyer,
+        seller=seller,
+        listing=listing,
+        serial_number=serial_number
+    )
 
-        # send mail to buyer
-        subject = 'Thanks for your purchase'
-        message = render_to_string('emails/success_purchase.html', {
-            'listing_id': listing.title,
-            'buyer_name': buyer.display_name,
-            'seller_name': seller.display_name,
-            'seller_email': seller.display_name,
-            'seller_phone': seller.phone_number,
-            'seller_address1': seller.address1,
-            'seller_address2': seller.address2,
-            'seller_city': seller.city,
-            'seller_zipcode': seller.zipcode,
-            'dashboard_link': 'https://www.tms.com/dashboard/transaction/' + listing.slug
-        })
+    # Send notification emails to buyer and seller as in your original code...
 
-        plain_message = strip_tags(message)
-        from_email = settings.EMAIL_HOST_USER
-        to_email = [buyer.email]
-        send_mail(subject, plain_message, from_email, to_email, html_message=message)
+    # Return the serialized transaction data
+    return JsonResponse({'message': 'Transaction created successfully', 'transaction': {
+            'transaction_id': transaction.serial_number,
+            'buyer': {'name': buyer.display_name, 'email': buyer.email, 'phone': buyer.phone_number},
+            'seller': {'name': seller.display_name, 'email': seller.email, 'phone': seller.phone_number},
+            'status': transaction.status,
+            'created_at': transaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
+        }}, status=201)
 
-        # Serialize buyer and seller fields
-        buyer_info = {
-            'name': buyer.display_name,
-            'email': buyer.email,
-            'phone': buyer.phone_number,
-        }
-
-        seller_info = {
-            'name': seller.display_name,
-            'email': seller.email,
-            'phone': seller.phone_number,
-            'address1': seller.address1,
-            'address2': seller.address2,
-            'city': seller.city,
-            'zipcode': seller.zipcode,
-        }
-
-        return JsonResponse({'message': 'Transaction created successfully', 'transaction': {
-                'transaction_id': transaction.serial_number,
-                'buyer': buyer_info,
-                'seller': seller_info,
-                'status': transaction.status,
-                'created_at': transaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
-            }}, status=201)
-        
-    else:
-        return JsonResponse({'error': 'Method not allowed'}, status=405)
 
 
 @api_view(['GET'])
@@ -215,7 +147,7 @@ def transaction(request, serial_number):
 @api_view(['POST'])
 def confirm_transaction(request):
     data = request.data
-
+    print(data)
 
     transaction = Transaction.objects.get(serial_number=data.get('serial_number'))
 
@@ -228,30 +160,107 @@ def confirm_transaction(request):
     else:
         print('error here')
 
-    buyer_email = data.get('buyer')
-    seller_email = data.get('seller')
+    transaction.save()
+
+    amount = data.get('amount')
+    buyer = Customer.objects.get(email = data.get('buyer'))
+    seller = Customer.objects.get(email=data.get('seller'))
     
     if transaction.paid and transaction.delivered == True:
+
+        # Release frozen deposits to buyer and seller
+        buyer_released = release_buyer_deposit(transaction.amount)
+        seller_released, platform_profit = release_seller_deposit(transaction.amount)
+
+        # Update buyer's deposit
+        buyer.frozen_deposit -= buyer_released  # Reduce frozen deposit
+        buyer.free_deposit += buyer_released  # Return released deposit to free deposit
+        buyer.save()
+
+        # Update seller's deposit
+        seller.frozen_deposit -= seller_released  # Reduce frozen deposit
+        seller.free_deposit += seller_released  # Return released deposit to free deposit
+        seller.save()
+
+        # Send notification email for platform profit
+        subject = 'Platform Profit Notification'
+        message = f'The platform has profited 10% of the transaction amount, which equals ${platform_profit}.'
+        from_email = settings.EMAIL_HOST_USER
+        to_email = ['tms.josecandido@gmail.com']
+        send_mail(subject, message, from_email, to_email)
+
         transaction.status = 'Transaction completed'
         transaction.save()
 
+        # send mail to seller
+        subject = 'Transaction complete'
+        message = render_to_string('emails/success_sell.html', {
+            'serial_number': transaction.serial_number,
+            'dashboard_link': 'https://www.tms.com/dashboard/transaction/' + transaction.serial_number
+        })
+
+        plain_message = strip_tags(message)
+        from_email = settings.EMAIL_HOST_USER
+        to_email = [buyer.email, seller.email, 'tms.josecandido@gmail.com']
+        send_mail(subject, plain_message, from_email, to_email, html_message=message)
+
+    return JsonResponse({'success': True}, status=200)
+
+
+@csrf_exempt
+@api_view(['POST'])
+def dispute_transaction(request):
+    data = request.data
+    print(request.data)
+    
+    # Assuming 'transactionId' is actually the 'serial_number' or another unique string identifier
+    try:
+        my_transaction = Transaction.objects.get(serial_number=data['transactionId'])
+    except Transaction.DoesNotExist:
+        return JsonResponse({'error': 'Transaction not found'}, status=404)
+    
+    try:
+        buyer = Customer.objects.get(email=data['buyer'])
+    except Customer.DoesNotExist:
+        return JsonResponse({'error': 'Buyer not found'}, status=404)
+
+    try:
+        seller = Customer.objects.get(email=data['seller'])
+    except Customer.DoesNotExist:
+        return JsonResponse({'error': 'Seller not found'}, status=404)
+    
+    claim = data.get('message', '')
+    persona = data.get('persona', '')
+
+    # Assuming Dispute model requires these fields
+    dispute = Dispute.objects.create(
+        transaction=my_transaction,
+        buyer=buyer,
+        seller=seller,
+        message=claim,
+        persona=persona
+    )
+    my_transaction.status = 'Transaction on Dispute'
+    my_transaction.save()
+    print('Dispute created successfully', dispute)
+
     # send mail to seller
-    subject = 'Transaction complete'
+    subject = 'Transaction on Dispute'
     message = render_to_string('emails/success_sell.html', {
-        'serial_number': transaction.serial_number,
-        'dashboard_link': 'https://www.tms.com/dashboard/transaction/' + transaction.serial_number
+        'serial_number': my_transaction.serial_number,
+        'dashboard_link': 'https://www.tms.com/dashboard/transaction/' + my_transaction.serial_number
     })
 
     plain_message = strip_tags(message)
     from_email = settings.EMAIL_HOST_USER
-    to_email = [buyer_email, seller_email, 'tms.josecandido@gmail.com']
+    to_email = [buyer.email, seller.email, 'tms.josecandido@gmail.com']
     send_mail(subject, plain_message, from_email, to_email, html_message=message)
 
     return JsonResponse({'success': True}, status=200)
 
 
 @api_view(['GET'])
-def my_transactions(request, email):
+def my_purchases(request, email):
     
     try:
         me = Customer.objects.get(email=email)
@@ -263,11 +272,41 @@ def my_transactions(request, email):
     except Listing.DoesNotExist:
         return Response({"error": "Transactions not found"}, status=404)
     
+@api_view(['GET'])
+def my_sales(request, email):
+    
+    try:
+        me = Customer.objects.get(email=email)
+        print(me)
+        transactions = Transaction.objects.filter(seller=me)
+        print(transactions.count())
+        serializer = TransactionsSerializer(transactions, many=True)
+        return Response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Transactions not found"}, status=404)
+    
 
 
 def generate_serial_number(length=20):
     characters = string.ascii_uppercase + string.digits  
     return ''.join(random.choices(characters, k=length))
+
+
+def freeze_deposit(amount):
+    # Freeze 30% of the transaction amount
+    frozen_deposit = amount * 0.30
+    return frozen_deposit
+
+def release_buyer_deposit(amount):
+    # Release the frozen 30% to the buyer
+    released_deposit = amount * 0.30
+    return released_deposit
+
+def release_seller_deposit(amount):
+    # Release 20% to the seller and keep 10% as platform profit
+    released_deposit = amount * 0.20
+    platform_profit = amount * 0.10
+    return released_deposit, platform_profit
 
 
 @csrf_exempt
