@@ -66,7 +66,8 @@ def customer_info(request, email):
         # Prepare the response data
         customer_data = {
             'status': customer.status,
-            'balance': customer.balance,
+            'frozen_deposit': customer.frozen_deposit,
+            'free_deposit': customer.free_deposit,
             'active_listings': active_listings,
             'active_offers': active_offers,
             'count_purchases': count_purchases,
@@ -112,7 +113,7 @@ def request_withdraw(request):
         subject = 'Withdraw Funds Request'
         message = render_to_string('emails/request_withdraw.html', {
             'customer_name': customer.display_name,
-            'balance': customer.balance
+            'free_deposit': customer.free_deposit
         })
         plain_message = strip_tags(message)
         from_email = settings.EMAIL_HOST_USER
@@ -123,7 +124,7 @@ def request_withdraw(request):
         subject = 'Withdraw Funds Request'
         message = render_to_string('emails/request_withdraw.html', {
             'customer_name': customer.email,
-            'balance': customer.balance
+            'free_deposit': customer.free_deposit
         })
         plain_message = strip_tags(message)
         from_email = settings.EMAIL_HOST_USER

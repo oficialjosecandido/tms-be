@@ -34,7 +34,9 @@ urlpatterns = [
     path('create-transaction', viewstransactions.new_payment_order, name='create-transaction'),
     path('transaction/<str:serial_number>', viewstransactions.transaction, name='transaction'),
     path('confirm-transaction', viewstransactions.confirm_transaction, name='confirm-transaction'),
-    path('my-transactions/<str:email>', viewstransactions.my_transactions, name='confirm-transaction'),
+    path('dispute-transaction', viewstransactions.dispute_transaction, name='dispute-transaction'),
+    path('my-purchases/<str:email>', viewstransactions.my_purchases, name='my-purchases'),
+    path('my-sales/<str:email>', viewstransactions.my_sales, name='my-sales'),
 
 
     # backoffice calls

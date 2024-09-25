@@ -30,13 +30,22 @@ class CustomUser(AbstractUser):
     )
 
 class Customer(models.Model):
+    LEVELS = [
+        ('Platinum', 'Platinum'),
+        ('Gold', 'Gold'),
+        ('Silver', 'Silver'),
+        ('Bronze', 'Bronze'),
+        ('Grass', 'Grass'),
+    ]
+
     display_name = models.CharField(max_length=500, blank=True, null=True)
     email = models.CharField(max_length=500)
     phone_number = models.CharField(max_length=100, blank=True, null=True)
     vat = models.CharField(max_length=20, blank=True, null=True)
-    balance = models.IntegerField(default=0, null=True, blank=True)
-    trusted_buyer = models.BooleanField(default=False)
-    trusted_seller = models.BooleanField(default=False)
+    frozen_deposit = models.IntegerField(default=0, null=True, blank=True)
+    free_deposit = models.IntegerField(default=0, null=True, blank=True)
+    
+    level = models.CharField(max_length=20, blank=True, null=True, choices=LEVELS)
     rating = models.IntegerField(default=0, null=True, blank=True)
 
     address1 = models.CharField(max_length=200, blank=True, null=True)
@@ -73,6 +82,14 @@ class Customer(models.Model):
         return f"{self.display_name} - {self.email} was created by {self.created_date} and has a status of {self.status}"
 
 class Listing(models.Model):
+
+    LEVELS = [
+        ('Platinum', 'Platinum'),
+        ('Gold', 'Gold'),
+        ('Silver', 'Silver'),
+        ('Bronze', 'Bronze'),
+        ('Grass', 'Grass'),
+    ]
 
     CATEGORIES = [
         ('Cars', 'Cars'),
@@ -129,7 +146,7 @@ class Listing(models.Model):
     condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
     excerpt = models.CharField(max_length=300, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    level = models.IntegerField(null=True, blank=True)
+    level = models.IntegerField(max_length=20, blank=True, null=True, choices=LEVELS)
     duration = models.CharField(max_length=100, null=True, blank=True)
     promoted = models.BooleanField(null=True, blank=True, default=False)
     
@@ -203,10 +220,9 @@ class Bid(models.Model):
 class Transaction(models.Model):
     STATUS_CHOICES = [
         ('Waiting Payment/Delivery', 'Waiting Payment/Delivery'),
-        ('Payment Confirmed', 'Payment Confirmed'),
-        ('Delivery Confirmed', 'Delivery Confirmed'),
         ('Transaction completed', 'Transaction Completed'),
         ('Transaction on Dispute', 'Transaction on Dispute'),
+        ('Transaction Canceled', 'Transaction Canceled'),
     ]
     serial_number = models.CharField(max_length=200, null=True, blank=True)
     amount = models.IntegerField(null=True, blank=True)
@@ -234,19 +250,20 @@ class Dispute(models.Model):
         ('Resolved for Buyer', 'Resolved for Buyer'),
         ('Resolved for Seller', 'Resolved for Seller')
     ]
-    transaction_number = models.CharField(max_length=200, null=True, blank=True)
+    transaction = models.ForeignKey(Transaction, on_delete=models.CASCADE, related_name='transaction')
     amount = models.IntegerField(null=True, blank=True)
     status = models.CharField(max_length=200, choices=STATUS_CHOICES, default='Dispute Initiated')
     buyer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='buyer_disputed')
     seller = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='seller_disputed')
-    listing = models.ForeignKey(Listing, on_delete=models.CASCADE, related_name='product_disputed')
+    message = models.TextField(null=True, blank=True)
+    persona = models.CharField(max_length=20, null=True, blank=True)
     
     # Dates
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
     
     def __str__(self):
-        return f'Dispute for: {self.transaction_number} with seller: {self.seller.email} and buyer: {self.buyer.email} with status: {self.status}'
+        return f'Dispute for: {self.transaction} with seller: {self.seller.email} and buyer: {self.buyer.email} with status: {self.status}'
 
 
 
