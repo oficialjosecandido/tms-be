@@ -22,62 +22,94 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 def accept_offer(request):
     data = request.data
     print('accepting offer', request.data)
+    
     amount = data.get('bid')
     status = 'Waiting Payment/Delivery'
     listing_id = data.get('listing')
-
-    listing = Listing.objects.get(id=listing_id)
-    seller = listing.customer
-    buyer = Customer.objects.get(id=data.get('customer'))
-
-    print(222, listing, buyer, seller, amount)
-
-    serial_number = generate_serial_number()
-
-    # Calculate the frozen deposit for both buyer and seller (30% of transaction amount)
-    frozen_deposit_buyer = freeze_deposit(amount)
-    frozen_deposit_seller = freeze_deposit(amount)
-
-    print(33333, frozen_deposit_seller, frozen_deposit_buyer)
-
-    # Check if buyer and seller have enough free deposit
-    if buyer.free_deposit < frozen_deposit_buyer:
-        return JsonResponse({'error': 'Buyer does not have enough free deposit'}, status=400)
-
-    if seller.free_deposit < frozen_deposit_seller:
-        return JsonResponse({'error': 'Seller does not have enough free deposit'}, status=400)
-
-    # Freeze 30% of the transaction amount for both buyer and seller
-    buyer.frozen_deposit += frozen_deposit_buyer
-    buyer.free_deposit -= frozen_deposit_buyer  # Deduct from buyer's free deposit
-    buyer.save()
-
-    seller.frozen_deposit += frozen_deposit_seller
-    seller.free_deposit -= frozen_deposit_seller  # Deduct from seller's free deposit
-    seller.save()
-
-    transaction = Transaction.objects.create(
-        amount=amount,
-        status=status,
-        buyer=buyer,
-        seller=seller,
-        listing=listing,
-        serial_number=serial_number
-    )
     
-    listing.status = 'Waiting Payment/Delivery'
-    listing.save()
+    try:
+        # Fetch the listing and customer information
+        listing = Listing.objects.get(id=listing_id)
+        seller = listing.customer
+        buyer = Customer.objects.get(id=data.get('customer'))
 
-    # Send notification emails to buyer and seller as in your original code...
+        print(222, listing, buyer, seller, amount)
 
-    # Return the serialized transaction data
-    return JsonResponse({'message': 'Transaction created successfully', 'transaction': {
-            'transaction_id': transaction.serial_number,
-            'buyer': {'name': buyer.display_name, 'email': buyer.email, 'phone': buyer.phone_number},
-            'seller': {'name': seller.display_name, 'email': seller.email, 'phone': seller.phone_number},
-            'status': transaction.status,
-            'created_at': transaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
-        }}, status=201)
+        # Generate serial number for the transaction
+        serial_number = generate_serial_number()
+
+        # Calculate the frozen deposit for both buyer and seller (30% of transaction amount)
+        frozen_deposit_buyer = freeze_deposit(amount)
+        frozen_deposit_seller = freeze_deposit(amount)
+
+        print(33333, frozen_deposit_seller, frozen_deposit_buyer)
+
+        # Check if buyer and seller have enough free deposit
+        if buyer.free_deposit < frozen_deposit_buyer:
+            print(f"Buyer has insufficient free deposit: {buyer.free_deposit} < {frozen_deposit_buyer}")
+            return JsonResponse({'error': 'Buyer does not have enough free deposit'}, status=400)
+
+        if seller.free_deposit < frozen_deposit_seller:
+            print(f"Seller has insufficient free deposit: {seller.free_deposit} < {frozen_deposit_seller}")
+            return JsonResponse({'error': 'Seller does not have enough free deposit'}, status=400)
+
+        # Freeze 30% of the transaction amount for both buyer and seller
+        buyer.frozen_deposit += frozen_deposit_buyer
+        buyer.free_deposit -= frozen_deposit_buyer  # Deduct from buyer's free deposit
+        buyer.save()
+
+        seller.frozen_deposit += frozen_deposit_seller
+        seller.free_deposit -= frozen_deposit_seller  # Deduct from seller's free deposit
+        seller.save()
+
+        # Create the transaction
+        transaction = Transaction.objects.create(
+            amount=amount,
+            status=status,
+            buyer=buyer,
+            seller=seller,
+            listing=listing,
+            serial_number=serial_number
+        )
+
+        # Update listing status
+        listing.status = 'Waiting Payment/Delivery'
+        listing.save()
+
+        # Send notification emails to buyer and seller (same logic as before)
+
+        # Return the serialized transaction data
+        return JsonResponse({
+            'message': 'Transaction created successfully',
+            'transaction': {
+                'transaction_id': transaction.serial_number,
+                'buyer': {
+                    'name': buyer.display_name,
+                    'email': buyer.email,
+                    'phone': buyer.phone_number
+                },
+                'seller': {
+                    'name': seller.display_name,
+                    'email': seller.email,
+                    'phone': seller.phone_number
+                },
+                'status': transaction.status,
+                'created_at': transaction.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            }
+        }, status=201)
+
+    except Listing.DoesNotExist:
+        print(f"Listing with ID {listing_id} not found.")
+        return JsonResponse({'error': 'Listing not found'}, status=404)
+    
+    except Customer.DoesNotExist:
+        print(f"Customer with ID {data.get('customer')} not found.")
+        return JsonResponse({'error': 'Customer not found'}, status=404)
+
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return JsonResponse({'error': 'Something went wrong'}, status=500)
+
 
 @csrf_exempt
 @api_view(['POST'])
