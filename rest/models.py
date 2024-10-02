@@ -58,8 +58,8 @@ class Customer(models.Model):
     image = models.FileField(upload_to='disposable_info/', blank=True, null=True)
     valid_id = models.BooleanField(default=False)
 
-    language = models.CharField(max_length=5, null=True, blank=True, default='EN')
-    currency = models.CharField(max_length=5, null=True, blank=True)
+    language = models.CharField(max_length=5, null=True, blank=True, default='en')
+    currency = models.CharField(max_length=5, null=True, blank=True, default='eur')
 
     def save_images(self, images):
         for index, image in enumerate(images):
