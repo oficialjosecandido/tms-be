@@ -11,6 +11,8 @@ from rest_framework.response import Response
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from django.db.models import Q
+from rest_framework.pagination import PageNumberPagination
 
 
 @api_view(['GET'])
@@ -196,11 +198,45 @@ def my_listings(request, identifier):
 @api_view(['GET'])
 def listings_category(request, categ):
     try:
-        listings = Listing.objects.filter(category=categ)
-        active_listings = listings.filter(status = 'Active').order_by('-created_at')
-        serializer = ListingSerializer(active_listings, many=True)
-        return Response(serializer.data)
+        listings = Listing.objects.filter(category=categ, status='Active').order_by('-created_at')
+        
+        # Add pagination
+        paginator = ListingPagination()
+        result_page = paginator.paginate_queryset(listings, request)
+        serializer = ListingSerializer(result_page, many=True)
+
+        return paginator.get_paginated_response(serializer.data)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listings not found"}, status=404)
+    
+
+@api_view(['GET'])
+def search_listings(request):
+    try:
+        term = request.query_params.get('term', '')  # Get the search term from query params
+        page_size = request.query_params.get('page_size', 20)  # Allow custom page size (default is 20)
+        
+        # Filter listings based on search term (title or excerpt)
+        listings = Listing.objects.filter(
+            Q(title__icontains=term) | Q(excerpt__icontains=term)
+        ).filter(status='Active').order_by('-created_at')
+        
+        # Pagination logic
+        paginator = PageNumberPagination()
+        paginator.page_size = page_size  # Set page size dynamically based on user input
+        paginated_listings = paginator.paginate_queryset(listings, request)
+        
+        # Serialize the paginated listings
+        serializer = ListingSerializer(paginated_listings, many=True)
+        
+        # Return paginated response
+        return paginator.get_paginated_response(serializer.data)
+    
     except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
 
 
+class ListingPagination(PageNumberPagination):
+    page_size = 9  # Default page size
+    page_size_query_param = 'page_size'  # Allow client to change page size
+    max_page_size = 100  # Max limit

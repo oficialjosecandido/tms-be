@@ -20,7 +20,8 @@ urlpatterns = [
     path('my-listings/<str:identifier>', viewslistings.my_listings, name='get_mylistings'),
     path('create-listing', viewslistings.create_listing, name='create_listing'),
     path('listing-images/<str:slug>', viewslistings.listing_images, name='listing_images'),
-    path('listing-category/<str:categ>', viewslistings.listings_category, name='listing_category'),
+    path('listing-category/<str:categ>/', viewslistings.listings_category, name='listing_category'),
+    path('listing-search/', viewslistings.search_listings, name='listing-search'),
 
     # new offers
     path('bid', viewsbids.post_bid, name='bid'),
