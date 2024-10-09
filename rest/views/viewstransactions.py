@@ -78,6 +78,7 @@ def accept_offer(request):
 @api_view(['POST'])
 def new_payment_order(request):
     data = request.data
+    print(1111, data)
     amount = data.get('amount')
     status = 'Waiting Payment/Delivery'
     listing_id = data.get('listing')
@@ -86,29 +87,43 @@ def new_payment_order(request):
 
     listing = Listing.objects.get(id=listing_id)
     seller = Customer.objects.get(id=seller_id)
+    print()
     buyer = Customer.objects.get(email=buyer_email)
 
     serial_number = generate_serial_number()
 
-    # Calculate the frozen deposit for both buyer and seller (30% of transaction amount)
-    frozen_deposit_buyer = freeze_deposit(amount)
-    frozen_deposit_seller = freeze_deposit(amount)
 
-    # Check if buyer and seller have enough free deposit
-    if buyer.free_deposit < frozen_deposit_buyer:
-        return JsonResponse({'error': 'Buyer does not have enough free deposit'}, status=400)
 
-    if seller.free_deposit < frozen_deposit_seller:
-        return JsonResponse({'error': 'Seller does not have enough free deposit'}, status=400)
+    if data.get('nature') != 'buynow':
+        # Calculate the frozen deposit for both buyer and seller (30% of transaction amount)
+        frozen_deposit_buyer = freeze_deposit(amount)
+        frozen_deposit_seller = freeze_deposit(amount)
 
-    # Freeze 30% of the transaction amount for both buyer and seller
-    buyer.frozen_deposit += frozen_deposit_buyer
-    buyer.free_deposit -= frozen_deposit_buyer  # Deduct from buyer's free deposit
-    buyer.save()
+        # Check if buyer and seller have enough free deposit
+        if buyer.free_deposit < frozen_deposit_buyer:
+            return JsonResponse({'error': 'Buyer does not have enough free deposit'}, status=400)
 
-    seller.frozen_deposit += frozen_deposit_seller
-    seller.free_deposit -= frozen_deposit_seller  # Deduct from seller's free deposit
-    seller.save()
+        if seller.free_deposit < frozen_deposit_seller:
+            return JsonResponse({'error': 'Seller does not have enough free deposit'}, status=400)
+
+        # Freeze 30% of the transaction amount for both buyer and seller
+        buyer.frozen_deposit += frozen_deposit_buyer
+        buyer.free_deposit -= frozen_deposit_buyer  # Deduct from buyer's free deposit
+        buyer.save()
+
+        seller.frozen_deposit += frozen_deposit_seller
+        seller.free_deposit -= frozen_deposit_seller  # Deduct from seller's free deposit
+        seller.save()
+    else:
+        # Save customer information
+        buyer.phone_number = data.get('buyer_phoneNumber')
+        buyer.display_name = data.get('buyer_name')
+        buyer.address1 = data.get('buyer_add1')
+        buyer.address2 = data.get('buyer_add2')
+        buyer.city = data.get('buyer_city')
+        buyer.zipcode = data.get('buyer_zipcode')
+        buyer.save()
+
 
     transaction = Transaction.objects.create(
         amount=amount,
@@ -118,8 +133,6 @@ def new_payment_order(request):
         listing=listing,
         serial_number=serial_number
     )
-
-    # Send notification emails to buyer and seller as in your original code...
 
     # Return the serialized transaction data
     return JsonResponse({'message': 'Transaction created successfully', 'transaction': {
@@ -136,8 +149,6 @@ def new_payment_order(request):
 def transaction(request, serial_number):
     try:
         transaction = Transaction.objects.get(serial_number=serial_number)
-        
-
         serializer = TransactionsSerializer(transaction)
         return Response(serializer.data)
     except Listing.DoesNotExist:
