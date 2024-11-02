@@ -25,19 +25,24 @@ def post_bid(request):
             email = data.get('customer')
             bid = data.get('bid')
             listing = Listing.objects.get(slug=listing_id)
-            customer = Customer.objects.get(email = email)
+            # Create or get the customer instance
+            customer, created = Customer.objects.get_or_create(email=email)
+
             new_bid = Bid.objects.create(
                 listing=listing,
                 customer=customer,
                 bid=bid
             )
+            # Log the customer and new bid for debugging
+            print(f'Customer: {customer}, Created: {created}')
+            print(f'New Bid: {new_bid}')
 
             # Send email notification to the user
-            subject = 'New Bid'
-            message = render_to_string('emails/create_listing_success.html', {
-                'listing_id': listing.id,
-                'seller_name': listing.customer.display_name,  # Assuming the customer is the seller
-                'dashboard_link': 'https://www.tms.com/seller/listing/' + str(listing.id)
+            subject = 'Thanks for your bid'
+            message = render_to_string('emails/N0004_thanks_bid.html', {
+                'listing_title': listing.title,
+                'customer_name': listing.customer.display_name,  # Assuming the customer is the seller
+                'listing_link': 'https://www.tms.com/seller/listing/' + str(listing.id)
             })
             plain_message = strip_tags(message)
             from_email = settings.EMAIL_HOST_USER
@@ -61,7 +66,6 @@ def post_bid(request):
         # Return a method not allowed response for non-POST requests
         return JsonResponse({'error': 'Method not allowed'}, status=405)
     
-
 
 @api_view(['GET'])
 def get_bids(request, slug):

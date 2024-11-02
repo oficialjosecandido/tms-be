@@ -47,6 +47,7 @@ class Customer(models.Model):
     
     level = models.CharField(max_length=20, blank=True, null=True, choices=LEVELS)
     rating = models.IntegerField(default=0, null=True, blank=True)
+    verified = models.BooleanField(default=False, null=True, blank=True)
 
     address1 = models.CharField(max_length=200, blank=True, null=True)
     address2 = models.CharField(max_length=200, blank=True, null=True)
