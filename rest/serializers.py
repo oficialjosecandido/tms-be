@@ -25,9 +25,26 @@ class TransactionsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class BidSerializer(serializers.ModelSerializer):
+    customer = serializers.SerializerMethodField()  # Custom field to handle customer serialization
+
     class Meta:
         model = Bid
-        fields = '__all__'
+        fields = ['id', 'created_at', 'bid', 'status', 'listing', 'customer']
+
+    def get_customer(self, obj):
+        # Assuming your Customer model has a 'verified' field
+        if obj.customer.verified:  # If customer is verified
+            return {
+                "customer_id": obj.customer.id,
+                "seller_id": obj.listing.customer.id,
+                "verified": obj.customer.verified
+            }
+        else:  # If customer is not verified, return limited information
+            return {
+                "customer_id": obj.customer.id,
+                "seller_id": obj.listing.customer.id,
+                "verified": obj.customer.verified
+            }
 
 
     

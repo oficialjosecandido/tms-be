@@ -21,13 +21,33 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 @api_view(['POST'])
 def accept_offer(request):
     data = request.data
+    
+    # Access the nested customer data safely
+    customer_data = data.get('customer')
+    customer_id = customer_data.get('customer_id') if customer_data else None
+    
+    # Verify if customer_id was successfully retrieved
+    if not customer_id:
+        return Response({"error": "Customer ID is missing or invalid"}, status=status.HTTP_400_BAD_REQUEST)
+
     amount = data.get('bid')
     status = 'Waiting Payment/Delivery'
     listing_id = data.get('listing')
 
-    listing = Listing.objects.get(id=listing_id)
+    # Check if listing_id is valid
+    try:
+        listing = Listing.objects.get(id=listing_id)
+    except Listing.DoesNotExist:
+        return Response({"error": "Listing not found"}, status=status.HTTP_404_NOT_FOUND)
+
     seller = listing.customer
-    buyer = Customer.objects.get(id=data.get('customer'))
+
+    # Try to retrieve the buyer
+    try:
+        buyer = Customer.objects.get(id=customer_id)
+    except Customer.DoesNotExist:
+        return Response({"error": "Customer not found"}, status=status.HTTP_404_NOT_FOUND)
+    
 
     serial_number = generate_serial_number()
 
@@ -40,7 +60,7 @@ def accept_offer(request):
         return JsonResponse({'error': 'Buyer does not have enough free deposit'}, status=400)
 
     if seller.free_deposit < frozen_deposit_seller:
-        return JsonResponse({'error': 'Seller does not have enough free deposit'}, status=400)
+        return JsonResponse({'error': 'You do not have enough free deposit. Please make a deposit of, at least, 10% of the offer you want to accept'}, status=400)
 
     # Freeze 30% of the transaction amount for both buyer and seller
     buyer.frozen_deposit += frozen_deposit_buyer

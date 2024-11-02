@@ -144,9 +144,9 @@ def create_listing(request):
 
             # Send email notification to the user
             subject = 'Listing Created and Pending Approval'
-            message = render_to_string('emails/create_listing_success.html', {
+            message = render_to_string('emails/N0003_create_listing_success.html', {
                 'customer_name': listing.customer.display_name,
-                'dashboard_link': 'https://trademyspin.web.app/listing/' + str(listing.slug)
+                'listing_link': 'https://trademyspin.web.app/listing/' + str(listing.slug)
             })
             plain_message = strip_tags(message)
             from_email = settings.EMAIL_HOST_USER
@@ -195,10 +195,10 @@ def my_listings(request, identifier):
         return Response({"error": "Listings not found"}, status=404)
     
 
-@api_view(['GET'])
+""" @api_view(['GET'])
 def listings_category(request, categ):
     try:
-        listings = Listing.objects.filter(category=categ, status='Active').order_by('-created_at')
+        listings = Listing.objects.filter(category=categ, status='Active').order_by('close_date')
         
         # Add pagination
         paginator = ListingPagination()
@@ -207,23 +207,52 @@ def listings_category(request, categ):
 
         return paginator.get_paginated_response(serializer.data)
     except Listing.DoesNotExist:
+        return Response({"error": "Listings not found"}, status=404) """
+
+
+@api_view(['GET'])
+def listings_category(request, categ):
+    try:
+        sort_option = request.GET.get('sort', 'close_date')
+        
+        sort_fields = {
+            'added': '-created_at',  
+            'closing': 'close_date',  
+            'price': 'starting_price'  
+        }
+        
+        order_by_field = sort_fields.get(sort_option, 'close_date')
+        listings = Listing.objects.filter(category=categ, status='Active').order_by(order_by_field)
+        # Pagination
+        paginator = ListingPagination()
+        result_page = paginator.paginate_queryset(listings, request)
+        serializer = ListingSerializer(result_page, many=True)
+        return paginator.get_paginated_response(serializer.data)
+    except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
+
     
 
 @api_view(['GET'])
-def search_listings(request):
+def search_listings(request, search):
     try:
-        term = request.query_params.get('term', '')  # Get the search term from query params
-        page_size = request.query_params.get('page_size', 20)  # Allow custom page size (default is 20)
+        sort_option = request.GET.get('sort', 'close_date')
+        
+        sort_fields = {
+            'added': '-created_at',  
+            'closing': 'close_date',  
+            'price': 'starting_price'  
+        }
+        
+        order_by_field = sort_fields.get(sort_option, 'close_date')
         
         # Filter listings based on search term (title or excerpt)
         listings = Listing.objects.filter(
-            Q(title__icontains=term) | Q(excerpt__icontains=term)
-        ).filter(status='Active').order_by('-created_at')
+            Q(title__icontains=search) | Q(excerpt__icontains=search)
+        ).filter(status='Active').order_by(order_by_field)
         
         # Pagination logic
-        paginator = PageNumberPagination()
-        paginator.page_size = page_size  # Set page size dynamically based on user input
+        paginator = ListingPagination()
         paginated_listings = paginator.paginate_queryset(listings, request)
         
         # Serialize the paginated listings
@@ -237,6 +266,6 @@ def search_listings(request):
 
 
 class ListingPagination(PageNumberPagination):
-    page_size = 9  # Default page size
+    page_size = 12  # Default page size
     page_size_query_param = 'page_size'  # Allow client to change page size
     max_page_size = 100  # Max limit
