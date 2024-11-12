@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <link href="https://fonts.cdnfonts.com/css/helvetica-neue-55" rel="stylesheet">
+    <title>BidNow | Your item was sold</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f8f9fa; font-family: 'Helvetica Neue', Arial, sans-serif;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="600" style="border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 10px 0 20px 0;">
+                <img src="../imgs/logo.png" width="200" height="60" border="0" alt="BidNow" style="display:block;margin-top: 20px;margin-bottom: 20px;">
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="background-color: #fff; padding: 25px; border-radius: 24px; box-shadow: 0 2px 8px rgba(73, 73, 73, 0.08);">
+                <h2 style="color: #212529; font-size: 16px; font-weight: 900; line-height: 24px; text-align: left;">Hello, {{ customer_name }}</h2>
+                <p style="color: #212529; font-weight: 500; text-align: left;">
+                    Congratulations! The following listing <strong>{{listing_title}} </strong> was sold. <br>
+                    You can open and view the transaction details, including the seller info, on the following <a href="{{transaction_link}}" style="color:#FFD333; text-decoration: none;" target="_blank">link</a>.
+                </p>
+                
+                <p style="color: #212529; font-weight: 500; text-align: left;">
+                    Please don’t forget to contact the buyer and arrange the payment & delivery. <br>
+                    Remember that if anything goes wrong you can always open a dispute that will be analysed and solved by a legal 3rd party. 
+                </p>
+
+                <p style="color: #212529; font-weight: 500; text-align: left;">
+                    Best regards,
+                </p>
+
+                
+
+            </td>
+        </tr>
+        <tr>
+            <td align="left" style="padding: 20px 20px;">
+                <p style="color: #212529; font-weight: 900;">Team BidNow</p>
+                <p style="color: #212529; font-weight: 500; margin: 0; text-align: justify;">Please do not reply to this message.</p>
+                <p style="color: #777; font-size: 14px; line-height: 1.2; margin: 0;">For more information, please contact our Helpline +351 933407551, from Monday to Sunday, between 9am and 5pm, or send an email to support@bidnow.com</p>
+            </td>
+        </tr>
+        <!-- <tr>
+            <td align="center" style="background-color: #dee2e6; padding: 20px; font-size: 16px; font-weight: 500;">
+                <a href="${move_izi_url}" style="color: #044e48; text-decoration: none;">MOVE-IZI</a>
+                <p style="color: #044e48;">Download our app and manage tolls in your fingertips</p>
+            </td>
+        </tr>
+        <tr>
+            <td align="center" style="background-color: #dee2e6; padding: 10px; border-bottom-left-radius: 24px; border-bottom-right-radius: 24px;">
+                <a href="${apple_store_url}" style="text-decoration: none;"><img src="${apple_logo_url}" width="119" height="40" alt="App Store Icon" style="display: inline-block; margin-right: 10px;"></a>
+                <a href="${google_play_url}" style="text-decoration: none;"><img src="${google_logo_url}" width="119" height="40" alt="Google Play Icon" style="display: inline-block; margin-left: 10px;"></a>
+            </td>
+        </tr> -->
+    </table>
+</body>
+</html>

@@ -115,7 +115,6 @@ def accept_offer(request):
 @api_view(['POST'])
 def new_payment_order(request):
     data = request.data
-    print(1111, data)
     amount = data.get('amount')
     status = 'Waiting Payment/Delivery'
     listing_id = data.get('listing')
@@ -124,7 +123,6 @@ def new_payment_order(request):
 
     listing = Listing.objects.get(id=listing_id)
     seller = Customer.objects.get(id=seller_id)
-    print()
     buyer = Customer.objects.get(email=buyer_email)
 
     serial_number = generate_serial_number()
@@ -170,6 +168,36 @@ def new_payment_order(request):
         listing=listing,
         serial_number=serial_number
     )
+
+    listing.status = 'On hold'
+    listing.save()
+
+    # send mail to seller
+    subject = 'Your item was sold'
+    message = render_to_string('emails/N0006_success_sell.html', {
+        'listing_title': listing.title,
+        'customer_name': seller.display_name,
+        'transaction_link': 'https://www.tms.com/transaction-details/' + transaction.serial_number
+    })
+
+    plain_message = strip_tags(message)
+    from_email = settings.EMAIL_HOST_USER
+    to_email = [seller.email, 'tms.josecandido@gmail.com']
+    send_mail(subject, plain_message, from_email, to_email, html_message=message)
+
+
+    # send mail to buyer
+    subject = 'Thanks for your Purchase'
+    message = render_to_string('emails/N0005_success_purchase.html', {
+        'listing_title': listing.title,
+        'customer_name': buyer.display_name,
+        'transaction_link': 'https://www.tms.com/transaction-details/' + transaction.serial_number
+    })
+
+    plain_message = strip_tags(message)
+    from_email = settings.EMAIL_HOST_USER
+    to_email = [buyer.email, 'tms.josecandido@gmail.com']
+    send_mail(subject, plain_message, from_email, to_email, html_message=message)
 
     # Return the serialized transaction data
     return JsonResponse({'message': 'Transaction created successfully', 'transaction': {

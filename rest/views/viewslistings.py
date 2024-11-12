@@ -88,7 +88,7 @@ def create_listing(request):
             customer_id = request.POST.get('customer_id')
             customer_name = request.POST.get('customer_name')
             customer_email = request.POST.get('customer_email')
-            print(request.POST)
+            print('POST request', request.POST)
 
             # Validate required fields
             if not title or not category:
@@ -98,6 +98,9 @@ def create_listing(request):
             if duration not in ['3', '7', '30']:
                 duration = 30
                 #return JsonResponse({'error': 'Invalid duration. Must be 3, 7, or 30 days.'}, status=400)
+
+            duration_days = int(duration)
+            close_date = timezone.now() + timedelta(days=duration_days)
 
             # Fetch customer based on ID
             try:
@@ -130,7 +133,8 @@ def create_listing(request):
                 location_city=location_city,
                 location_zipcode=location_zipcode,
                 image = image_files[0],
-                customer=customer
+                customer=customer,
+                close_date=close_date 
             )
 
             #save image files
@@ -194,20 +198,6 @@ def my_listings(request, identifier):
     except Listing.DoesNotExist:
         return Response({"error": "Listings not found"}, status=404)
     
-
-""" @api_view(['GET'])
-def listings_category(request, categ):
-    try:
-        listings = Listing.objects.filter(category=categ, status='Active').order_by('close_date')
-        
-        # Add pagination
-        paginator = ListingPagination()
-        result_page = paginator.paginate_queryset(listings, request)
-        serializer = ListingSerializer(result_page, many=True)
-
-        return paginator.get_paginated_response(serializer.data)
-    except Listing.DoesNotExist:
-        return Response({"error": "Listings not found"}, status=404) """
 
 
 @api_view(['GET'])
