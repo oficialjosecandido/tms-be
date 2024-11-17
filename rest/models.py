@@ -270,6 +270,18 @@ class Dispute(models.Model):
 
 
 
+class Stripe(models.Model):
+    STATUS_CHOICES = [
+        ('Add', 'Add'),
+        ('Withdraw', 'Withdraw')
+    ]
 
+    created_at = models.DateTimeField(auto_now_add=True)
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    amount = models.IntegerField(null=True, blank=True)
+    type = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Withdraw')
+
+    def __str__(self):
+        return f'New {self.type} Stripe movement of {self.amount}'
 
 

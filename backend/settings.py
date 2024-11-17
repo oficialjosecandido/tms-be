@@ -37,6 +37,21 @@ CORS_ALLOWED_ORIGINS = [
     # Add any other origins as needed
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:4200",
+    "https://tms-dev-787d4.web.app",
+    # Add any other origins
+]
+
+CSRF_COOKIE_NAME = 'csrftoken'
+CSRF_COOKIE_SECURE = False  # Set True only for HTTPS
+CSRF_COOKIE_SAMESITE = 'Lax'  # Or 'None' if frontend/backend are on different origins
+CSRF_COOKIE_HTTPONLY = False
+
+
+
+
+
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'tms-dev-787d4.web.app', 'tms-dev-32521fed1ae6.herokuapp.com']
 
 # Application definition
@@ -55,7 +70,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
@@ -64,8 +79,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'backend.urls'
 
@@ -178,6 +193,7 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 STRIPE_SECRET_KEY = config.STRIPE_SECRET_KEY
+STRIPE_PUBLISHABLE_KEY = config.STRIPE_PUBLISHABLE_KEY
 AWS_ACCESS_KEY_ID = config.AWS_ACCESS_KEY_ID
 AWS_SECRET_ACCESS_KEY = config.AWS_SECRET_ACCESS_KEY
 AWS_STORAGE_BUCKET_NAME = config.AWS_STORAGE_BUCKET_NAME

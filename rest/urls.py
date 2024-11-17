@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import views, viewslistings, viewstransactions, viewscustomers, viewsbids, viewsbackoffice
+from .views import views, viewslistings, viewstransactions, viewscustomers, viewsbids, viewsbackoffice, stripeviews
 
 
 urlpatterns = [
@@ -38,6 +38,13 @@ urlpatterns = [
     path('dispute-transaction', viewstransactions.dispute_transaction, name='dispute-transaction'),
     path('my-purchases/<str:email>', viewstransactions.my_purchases, name='my-purchases'),
     path('my-sales/<str:email>', viewstransactions.my_sales, name='my-sales'),
+ 
+    #stripe
+    # path('make_payment/', stripeviews.PaymentAPI.as_view(), name='make_payment'),
+    # path('pay', stripeviews.generateToken, name="pay"),
+    # path('create-checkout-session/', stripeviews.create_checkout_session, name='create_checkout_session'),
+    path('charge/', views.stripe_charge, name='charge'),
+
 
 
     # backoffice calls

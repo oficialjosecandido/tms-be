@@ -11,6 +11,9 @@ from django.conf import settings
 from rest.serializers import *
 from ..models import *
 from django.http import JsonResponse
+from rest_framework.renderers import JSONRenderer
+from rest_framework.decorators import api_view, renderer_classes
+
 
 @api_view(['PUT'])
 def update_customer(request, id):
@@ -84,11 +87,9 @@ def customer_info(request, email):
 
 
 @api_view(['GET'])
+@renderer_classes([JSONRenderer])  # Explicitly use JSONRenderer
 def get_customer_email(request, id):    
-    # get_or_create returns a tuple: (instance, created)
     customer, created = Customer.objects.get_or_create(email=id)
-    
-    # Pass the customer instance to the serializer
     serializer = CustomerSerializer(customer)
     return Response(serializer.data)
 
