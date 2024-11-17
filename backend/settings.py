@@ -37,15 +37,23 @@ CORS_ALLOWED_ORIGINS = [
     # Add any other origins as needed
 ]
 
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'X-CSRFToken',  # Ensure this header is allowed
+    'Authorization',
+]
+
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:4200",
     "https://tms-dev-787d4.web.app",
+    "https://tms-dev-32521fed1ae6.herokuapp.com", 
+    "https://trademyspin.web.app",
     # Add any other origins
 ]
 
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_SAMESITE = 'None'  # Allow cross-origin requests, adjust as needed
 CSRF_COOKIE_NAME = 'csrftoken'
-CSRF_COOKIE_SECURE = False  # Set True only for HTTPS
-CSRF_COOKIE_SAMESITE = 'Lax'  # Or 'None' if frontend/backend are on different origins
 CSRF_COOKIE_HTTPONLY = False
 
 
