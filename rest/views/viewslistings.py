@@ -13,16 +13,24 @@ from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
+from rest.models import person_colection
 
 
 @api_view(['GET'])
 def all_listings(request):
-    try:
+    records = {
+        "first_name": "John",
+        "last_name": "Doe",
+    }
+
+    person_colection.insert_one(records)
+    return Response({"success": "New person added"}, status=200)
+    """ try:
         listings = Listing.objects.order_by('-created_at')
         serializer = ListingSerializer(listings, many=True)
         return Response(serializer.data)
     except Listing.DoesNotExist:
-        return Response({"error": "Listings not found"}, status=404)
+        return Response({"error": "Listings not found"}, status=404) """
 
 @api_view(['GET'])
 def listing_id(request, id):

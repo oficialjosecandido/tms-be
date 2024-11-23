@@ -8,6 +8,11 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from datetime import datetime, timedelta
 import os
+
+from db_connection import db
+
+person_colection = db['user']
+
 class CustomUser(AbstractUser):
     # Your custom user model fields go here
     points = models.IntegerField(default=0)

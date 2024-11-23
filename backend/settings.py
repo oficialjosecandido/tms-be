@@ -31,6 +31,7 @@ CORS_ALLOW_CREDENTIALS = True
 # Allow CORS from specific origins
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:4200",
+    "http://localhost:4201",
     "http://localhost:55048",
     "https://tms-dev-787d4.web.app",
     "https://trademyspin.web.app"
@@ -45,6 +46,7 @@ CORS_ALLOW_HEADERS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:4200",
+    "http://localhost:4201",
     "https://tms-dev-787d4.web.app",
     "https://tms-dev-32521fed1ae6.herokuapp.com", 
     "https://trademyspin.web.app",
@@ -114,12 +116,12 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-DATABASES = {
+""" DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db1.sqlite3',
     }
-}
+} """
 
 
 # Password validation
