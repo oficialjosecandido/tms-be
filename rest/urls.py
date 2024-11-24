@@ -13,6 +13,8 @@ urlpatterns = [
     path('customer/update/<int:id>/', viewscustomers.update_customer, name='update_customer'), 
     path('my-kpis/<str:email>/', viewscustomers.customer_info, name='my_kpis'), 
 
+    
+
     # new listings
     path('listings/', viewslistings.all_listings, name='listings'),
     path('listing/<str:slug>', viewslistings.listing_detail, name='listing_detail'),
@@ -48,6 +50,7 @@ urlpatterns = [
 
 
     # backoffice calls
+    path('my-customers/', viewsbackoffice.my_customers , name='my-customers'),
     path('close-auctions', viewsbackoffice.close_auctions , name='create-transaction'),                     # closes auctions
     path('hold_listing', viewsbackoffice.hold_listing , name='hold_listing'),                         # forces seller to accept offer
     path('force-confirm-payment', viewsbackoffice.force_confirm_payment , name='create-transaction'),       # forces buyer to confirm payment

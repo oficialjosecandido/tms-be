@@ -1,6 +1,7 @@
 import json
 from rest.serializers import *
 from rest_framework.decorators import api_view
+from rest_framework import status
 from rest.models import *
 from django.http import JsonResponse
 from django.core.mail import send_mail
@@ -14,6 +15,14 @@ from django.utils import timezone
 
 
 @api_view(['GET'])
+def my_customers(request):
+    
+    customers = Customer.objects.all()
+    serializer = CustomerSerializer(customers, many=True)
+    return Response(serializer.data, status=200)
+
+
+@api_view(['GET'])
 def close_auctions(request):
     end_auctions = 0
     for listing in Listing.objects.all():
@@ -23,7 +32,7 @@ def close_auctions(request):
                 end_auctions += 1
                 listing.save()
 
-    return Response({'Listings closed': end_auctions }, status=200)
+    return Response({'Listings closed': end_auctions })
 
 @api_view(['GET'])
 def hold_listing(request):
