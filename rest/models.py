@@ -8,6 +8,16 @@ from django.db.models.signals import pre_save
 from django.dispatch import receiver
 from datetime import datetime, timedelta
 import os
+
+def get_listing_upload_path(instance, filename):
+    """
+    Function to determine the upload path dynamically.
+    Saves files to: listing_images/listing_id/filename
+    """
+    listing_id = instance.listing.id if instance.listing else 'unknown'
+    return os.path.join('listing_images', str(listing_id), filename)
+
+
 class CustomUser(AbstractUser):
     # Your custom user model fields go here
     points = models.IntegerField(default=0)
@@ -147,7 +157,7 @@ class Listing(models.Model):
     condition = models.CharField(max_length=100, choices=CONDITION_CHOICES, blank=True, null=True)
     excerpt = models.CharField(max_length=300, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
-    level = models.IntegerField(max_length=20, blank=True, null=True, choices=LEVELS)
+    level = models.IntegerField(blank=True, null=True, choices=LEVELS)
     duration = models.CharField(max_length=100, null=True, blank=True)
     promoted = models.BooleanField(null=True, blank=True, default=False)
     
@@ -186,20 +196,10 @@ class Listing(models.Model):
 
 class ListingImage(models.Model):
     listing = models.ForeignKey('Listing', on_delete=models.CASCADE, related_name='listing_images')
-    image = models.ImageField(upload_to='listing_images/')  # Update this line
+    image = models.ImageField(upload_to=get_listing_upload_path)  # Use function here
 
     def __str__(self):
         return f'Image for Listing ID: {self.listing.id}'
-
-    def get_upload_path(instance, filename):
-        """
-        Function to determine the upload path dynamically.
-        Saves files to: auctions/customer_email/listing_id/filename
-        """
-        listing_id = instance.listing.id
-        return os.path.join('auctions', str(listing_id), filename)
-
-    image = models.ImageField(upload_to=get_upload_path)
 
 class Bid(models.Model):
     STATUS_CHOICES = [
